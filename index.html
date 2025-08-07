@@ -1,0 +1,526 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>旅游的小网站-主页</title>
+    <!-- 加载状态样式（检测时显示） -->
+    <style>
+        /* 核心修复：禁用安卓默认点击高亮 */
+        * {
+            -webkit-tap-highlight-color: transparent; /* 移除安卓点击高亮背景 */
+            outline: none; /* 移除聚焦时的默认轮廓 */
+        }
+        a, button, input, select {
+            -webkit-tap-highlight-color: transparent; /* 单独强化可交互元素 */
+        }
+
+        /* 加载遮罩：覆盖整个页面，检测完成后隐藏 */
+        .loading-mask {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999; /* 确保在最上层 */
+        }
+        .loading-text {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .progress-bar {
+            width: 80%;
+            max-width: 400px;
+            height: 8px;
+            background: #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: #165DFF;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* 主页基础样式（初始隐藏，检测完成后显示） */
+        .main-content {
+            display: none; /* 先隐藏，检测完再显示 */
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #0A2463;
+            color: white;
+            min-height: 100vh;
+            font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+            padding: 20px 0;
+            line-height: 1.5;
+        }
+        .container {
+            width: 90%;
+            max-width: 500px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 15px;
+            font-size: 24px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        .desc {
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.9);
+        }
+        .btn {
+            display: block;
+            width: 80%;
+            max-width: 300px;
+            margin: 12px auto;
+            padding: 12px 0;
+            border: 2px solid white;
+            border-radius: 50px;
+            color: white;
+            font-size: 16px;
+            background: transparent;
+            cursor: pointer;
+            text-decoration: none;
+            /* 补充交互反馈（替代默认高亮） */
+            transition: all 0.2s ease;
+        }
+        .btn:hover, .btn:active {
+            background: white;
+            color: #165DFF;
+            /* 用缩放替代默认高亮，增强反馈 */
+            transform: scale(0.98);
+        }
+        .search-box {
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .search-input {
+            width: 70%;
+            padding: 10px 15px;
+            border: 2px solid white;
+            border-radius: 50px 0 0 50px;
+            font-size: 14px;
+            outline: none;
+            float: left;
+        }
+        .search-btn {
+            width: 30%;
+            padding: 10px 0;
+            border: 2px solid white;
+            border-left: none;
+            border-radius: 0 50px 50px 0;
+            background: white;
+            color: #165DFF;
+            font-size: 14px;
+            cursor: pointer;
+            float: left;
+            transition: all 0.2s ease;
+        }
+        .search-btn:active {
+            transform: scale(0.95);
+        }
+        .search-engine {
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            border: 2px solid white;
+            border-radius: 50px;
+            background: transparent;
+            color: white;
+            font-size: 14px;
+            width: 60%;
+            max-width: 250px;
+        }
+        .bookmarks-title {
+            margin: 30px 0 15px;
+            font-size: 18px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        .bookmarks {
+            margin: 15px 0 25px;
+            font-size: 0;
+        }
+        .bookmark-item {
+            display: inline-block;
+            margin: 5px;
+            padding: 5px 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50px;
+            text-decoration: none;
+            color: white;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        .bookmark-item:active {
+            transform: scale(0.95);
+        }
+        .bookmark-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 5px;
+            border-radius: 3px;
+            vertical-align: middle;
+        }
+        .delete-btn {
+            margin-left: 5px;
+            padding: 2px 5px;
+            background: rgba(255,0,0,0.5);
+            border: none;
+            border-radius: 3px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .delete-btn:active {
+            transform: scale(0.8);
+        }
+        .add-bookmark-btn {
+            margin: 10px auto 20px;
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+        .bookmark-form {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            display: none;
+        }
+        .form-group {
+            margin: 10px 0;
+        }
+        .form-input {
+            width: 80%;
+            padding: 8px 10px;
+            border: 2px solid white;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .form-btn {
+            margin: 5px 3px;
+            padding: 6px 12px;
+            border: 2px solid white;
+            border-radius: 5px;
+            background: transparent;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .form-btn:active {
+            transform: scale(0.95);
+        }
+        .copyright {
+            margin-top: 40px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+        }
+    </style>
+</head>
+<body>
+    <!-- 加载状态（检测时显示） -->
+    <div class="loading-mask" id="loadingMask">
+        <div class="loading-text">正在检测浏览器特性...</div>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+
+    <!-- 主页内容（初始隐藏，检测完成后显示） -->
+    <div class="main-content" id="mainContent">
+        <div class="container">
+            <h1>旅游的小网站</h1>
+            <p class="desc">这里有搜索，看来这里可以设成你的主页了</p>
+            <div>
+                <!-- 搜索引擎选择框 -->
+                <select class="search-engine" id="searchEngine">
+                    <option value="bing">必应搜索</option>
+                    <option value="baidu">百度搜索</option>
+                    <option value="yandex">Yandex搜索</option>
+                    <option value="google">谷歌搜索(外网可用)</option>
+                </select>
+
+                <div class="search-box">
+                    <input type="text" class="search-input" id="searchInput" placeholder="搜索...">
+                    <button class="search-btn" onclick="performSearch()">搜索</button>
+                </div>
+            </div>
+
+            <h3 class="bookmarks-title">你的书签</h3>
+            <button class="btn add-bookmark-btn" onclick="toggleBookmarkForm()">添加书签</button>
+            <div class="bookmark-form" id="bookmarkForm">
+                <div class="form-group">
+                    <input type="text" class="form-input" id="bookmarkName" placeholder="书签名称">
+                </div>
+                <div class="form-group">
+                    <input type="text" class="form-input" id="bookmarkUrl" placeholder="网址（请包含http://等）">
+                </div>
+                <button class="form-btn" onclick="saveBookmark()">保存</button>
+                <button class="form-btn" onclick="toggleBookmarkForm()">取消</button>
+            </div>
+            <div class="bookmarks" id="bookmarksList"></div>
+
+            <div class="buttons">
+                <a href="game/index.html" class="btn" onclick="return delayJump(this, 300)">游戏</a>
+                <a href="tools/index.html" class="btn" onclick="return delayJump(this, 300)">工具</a>
+                <a href="resources/index.html" class="btn" onclick="return delayJump(this, 300)">资源</a>
+
+            </div>
+
+            <div class="copyright">
+                ©2025 bilibili/快手@旅游_LinYaOVO<br>
+                版权所有
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 检测配置：必要的浏览器特性（用于样式适配）
+        const testFeatures = [
+            {
+                name: "ES6基础语法",
+                test: () => {
+                    try {
+                        let a = 1;
+                        const b = 2;
+                        const fn = () => a + b;
+                        return fn() === 3;
+                    } catch (e) {
+                        return false;
+                    }
+                }
+            },
+            {
+                name: "Promise支持",
+                test: () => {
+                    try {
+                        return new Promise(resolve => resolve(true)).then(v => v);
+                    } catch (e) {
+                        return false;
+                    }
+                }
+            },
+            {
+                name: "Flex布局",
+                test: () => {
+                    try {
+                        return CSS.supports('display', 'flex') || CSS.supports('display', '-webkit-box');
+                    } catch (e) {
+                        return false;
+                    }
+                }
+            },
+            {
+                name: "localStorage存储",
+                test: () => {
+                    try {
+                        window.localStorage.setItem('test', '1');
+                        window.localStorage.removeItem('test');
+                        return true;
+                    } catch (e) {
+                        return false;
+                    }
+                }
+            }
+        ];
+
+        // 页面加载后先执行检测
+        window.onload = async function() {
+            await runTests(); // 执行检测
+            initPage(); // 检测完成后初始化页面
+        };
+
+        // 执行浏览器特性检测
+        async function runTests() {
+            const progressBar = document.getElementById('progress');
+            const total = testFeatures.length;
+            const supportResults = { supported: [], unsupported: [] };
+
+            for (let i = 0; i < total; i++) {
+                const feature = testFeatures[i];
+                let isSupported;
+                try {
+                    isSupported = feature.test();
+                } catch (e) {
+                    isSupported = false;
+                }
+                if (isSupported) {
+                    supportResults.supported.push(feature.name);
+                } else {
+                    supportResults.unsupported.push(feature.name);
+                }
+                // 更新进度条
+                progressBar.style.width = `${Math.round((i + 1) / total * 100)}%`;
+                await new Promise(resolve => setTimeout(resolve, 80)); // 轻微延迟，让用户看到进度
+            }
+
+            // 存储检测结果（供样式适配用）
+            localStorage.setItem('browserSupport', JSON.stringify(supportResults));
+        }
+
+        // 检测完成后初始化页面
+        function initPage() {
+            // 隐藏加载遮罩，显示主页内容
+            document.getElementById('loadingMask').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+
+            // 加载高级样式（基于检测结果）
+            loadAdvancedStyles();
+
+            // 初始化书签
+            initBookmarks();
+        }
+
+        // 根据检测结果加载高级样式
+        function loadAdvancedStyles() {
+            const browserSupport = JSON.parse(localStorage.getItem('browserSupport') || '{"supported":[]}');
+            if (browserSupport.supported.includes("Flex布局")) {
+                const style = document.createElement('style');
+                style.textContent = `
+                    body {
+                        background: -webkit-linear-gradient(top, #165DFF, #0A2463 80%, #051540);
+                        background: linear-gradient(to bottom, #165DFF, #0A2463 80%, #051540);
+                        background-attachment: fixed;
+                    }
+                    .search-box {
+                        display: -webkit-box;
+                        display: flex;
+                        -webkit-box-pack: center;
+                        justify-content: center;
+                        float: none;
+                    }
+                    .bookmarks {
+                        display: -webkit-box;
+                        display: flex;
+                        -webkit-box-pack: center;
+                        justify-content: center;
+                        -webkit-flex-wrap: wrap;
+                        flex-wrap: wrap;
+                        gap: 10px;
+                        font-size: initial;
+                    }
+                    .btn {
+                        -webkit-transition: all 0.3s ease;
+                        transition: all 0.3s ease;
+                    }
+                    .btn:hover, .btn:active {
+                        -webkit-transform: scale(1.05);
+                        transform: scale(1.05);
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+
+        // 以下为原有功能函数（保持不变）
+        function delayJump(element, delay) {
+            var e = window.event || arguments.callee.caller.arguments[0];
+            if (e.preventDefault) e.preventDefault();
+            else e.returnValue = false;
+            setTimeout(function() {
+                window.location.href = element.getAttribute('href');
+            }, delay);
+            return false;
+        }
+
+        function performSearch() {
+            var input = document.getElementById('searchInput');
+            var engine = document.getElementById('searchEngine');
+            var keyword = input.value.trim();
+            if (!keyword) return;
+
+            var baseUrl = {
+                'bing': 'https://cn.bing.com/search?q=',
+                'baidu': 'https://www.baidu.com/s?wd=',
+                'yandex': 'https://yandex.com/search/?text=',
+                'google': 'https://www.google.com/search?q='
+            }[engine.value] || 'https://cn.bing.com/search?q=';
+            window.location.href = baseUrl + encodeURIComponent(keyword);
+        }
+
+        function initBookmarks() {
+            var savedBookmarks = localStorage.getItem('bookmarks');
+            if (!savedBookmarks) {
+                var defaultBookmarks = [
+                    {name: 'poki小游戏', url: 'https://poki.com'},
+                    {name: '送我服务器的大好人bilibili@晥請', url: 'https://b23.tv/NbvmoSd'},
+                ];
+                localStorage.setItem('bookmarks', JSON.stringify(defaultBookmarks));
+                savedBookmarks = JSON.stringify(defaultBookmarks);
+            }
+            renderBookmarks(JSON.parse(savedBookmarks));
+        }
+
+        function renderBookmarks(bookmarks) {
+            var listContainer = document.getElementById('bookmarksList');
+            listContainer.innerHTML = '';
+            for (var i = 0; i < bookmarks.length; i++) {
+                var bookmark = bookmarks[i];
+                var urlObj = document.createElement('a');
+                urlObj.href = bookmark.url;
+                var domain = urlObj.protocol + '//' + urlObj.hostname;
+                var faviconUrl = domain + '/favicon.ico';
+                var item = document.createElement('div');
+                item.className = 'bookmark-item';
+                item.innerHTML = '\
+                    <img src="' + faviconUrl + '" class="bookmark-icon" alt="图标" onerror="this.src=\'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==\'">\
+                    <a href="' + bookmark.url + '" target="_blank" style="color:white; text-decoration:none; margin-right:5px;">' + bookmark.name + '</a>\
+                    <button class="delete-btn" onclick="deleteBookmark(' + i + ')">×</button>\
+                ';
+                listContainer.appendChild(item);
+            }
+        }
+
+        function toggleBookmarkForm() {
+            var form = document.getElementById('bookmarkForm');
+            form.style.display = form.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function saveBookmark() {
+            var nameInput = document.getElementById('bookmarkName');
+            var urlInput = document.getElementById('bookmarkUrl');
+            var name = nameInput.value.trim();
+            var url = urlInput.value.trim();
+            if (!name || !url) {
+                alert('请输入书签名称和网址');
+                return;
+            }
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'http://' + url;
+            }
+            var bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]');
+            bookmarks.push({name: name, url: url});
+            localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+            renderBookmarks(bookmarks);
+            nameInput.value = '';
+            urlInput.value = '';
+            toggleBookmarkForm();
+        }
+
+        function deleteBookmark(index) {
+            if (confirm('确定要删除这个书签吗？')) {
+                var bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]');
+                bookmarks.splice(index, 1);
+                localStorage.setItem('bookmarks', JSON.stringify(bookmarks));
+                renderBookmarks(bookmarks);
+            }
+        }
+    </script>
+</body>
+</html>
