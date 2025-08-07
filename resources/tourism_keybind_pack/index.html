@@ -1,0 +1,166 @@
+<!-- 请用UTF-8编码保存（MT管理器默认即可） -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旅游的键位整合包</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(to bottom, #165DFF, #0A2463 80%, #051540);
+            background-attachment: fixed;
+            color: white;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            padding: 20px 0 40px;
+        }
+        .container {
+            width: 90%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        /* 标题与简介 */
+        .title-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .intro {
+            font-size: 16px;
+            line-height: 1.6;
+            color: rgba(255,255,255,0.9);
+            text-align: left;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        /* 截图展示区 */
+        .screenshots {
+            margin: 30px 0;
+        }
+        .screenshots-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .screenshot-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        .screenshot-img {
+            width: 100%;
+            max-width: 280px;
+            border: 2px solid rgba(255,255,255,0.7);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        /* 按钮区 */
+        .action-section {
+            margin: 40px 0 20px;
+        }
+        .action-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .action-btn {
+            display: block;
+            width: 85%;
+            max-width: 350px;
+            margin: 18px auto;
+            padding: 16px 0;
+            border: 2px solid rgba(255,255,255,0.9);
+            border-radius: 50px;
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            text-decoration: none;
+            background: transparent;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            /* 新增：禁用安卓默认点击高亮 */
+            -webkit-tap-highlight-color: transparent;
+        }
+        .action-btn:after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+        .action-btn:hover:after { left: 100%; }
+        .action-btn:hover {
+            background: rgba(255,255,255,0.9);
+            color: #165DFF;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        /* 赞助按钮样式 */
+        .sponsor-btn {
+            background: rgba(255,153,0,0.2);
+            border-color: #ff9900;
+        }
+        /* 版权信息 */
+        .copyright {
+            margin-top: 50px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 标题与简介 -->
+        <div class="title-section">
+            <h1>旅游的键位整合包</h1>
+            <div class="intro">
+                <p>不知道为什么还没更新完最主要的功能，点下方的赞助小孩哥一杯奶茶让我尽量努力制作（）</p>
+            </div>
+        </div>
+
+        <!-- 截图展示（保留2张） -->
+        <div class="screenshots">
+            <h3 class="screenshots-title">键位效果展示</h3>
+            <div class="screenshot-container">
+                <img src="welcomepage.png" class="screenshot-img" alt="欢迎页面">
+                <img src="defaultkeybind.png" class="screenshot-img" alt="默认键位">
+            </div>
+        </div>
+
+        <!-- 仅保留赞助按钮 -->
+        <div class="action-section">
+            <h3 class="action-title">支持小孩哥制作</h3>
+            <a href="#" class="action-btn sponsor-btn" onclick="return delayJump(this, 300)">
+                赞助小孩哥一杯奶茶 🥤
+            </a>
+        </div>
+
+        <!-- 版权信息 -->
+        <div class="copyright">
+            ©2025 bilibili/快手@旅游_LinYaOVO<br>
+            键位仅供个人使用，禁止二次售卖
+        </div>
+    </div>
+
+    <script>
+        // 延迟跳转函数（保持交互一致）
+        function delayJump(element, delay) {
+            event.preventDefault ? event.preventDefault() : (event.returnValue = false);
+            setTimeout(() => { window.location.href = element.href; }, delay);
+            return false;
+        }
+    </script>
+</body>
+</html>

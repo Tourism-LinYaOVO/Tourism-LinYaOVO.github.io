@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旅游的小网站-计算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0A2463;
+            background: -webkit-gradient(linear, top, bottom, from(#165DFF), color-stop(80%, #0A2463), to(#051540));
+            background: -webkit-linear-gradient(top, #165DFF, #0A2463 80%, #051540);
+            background: linear-gradient(to bottom, #165DFF, #0A2463 80%, #051540);
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            background-size: cover;
+            color: white;
+            min-height: 100vh;
+            font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -webkit-flex-direction: column;
+            flex-direction: column;
+            padding: 20px 0;
+        }
+        .container {
+            width: 90%;
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: center;
+            -webkit-box-flex: 1;
+            -webkit-flex: 1;
+            flex: 1;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -webkit-flex-direction: column;
+            flex-direction: column;
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 26px;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .calculator {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px 0 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .display {
+            width: 100%;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 32px;
+            text-align: right;
+            padding: 0 15px;
+            line-height: 70px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border: 1px solid rgba(255,255,255,0.2);
+            font-family: 'Courier New', monospace;
+        }
+        .buttons {
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-flex-wrap: wrap;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .btn {
+            width: calc(25% - 9px);
+            height: 55px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            font-size: 20px;
+            color: white;
+            cursor: pointer;
+            -webkit-transition: all 0.2s;
+            transition: all 0.2s;
+            /* 禁用安卓高亮效果 */
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+        }
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .btn.operator {
+            background: rgba(22, 93, 255, 0.3);
+        }
+        .btn.equals {
+            background: rgba(255, 165, 0, 0.5);
+        }
+        .btn.clear {
+            background: rgba(255, 50, 50, 0.3);
+        }
+        .copyright {
+            margin-top: 15px;
+            padding: 12px 0;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .back-btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 30px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.2);
+            -webkit-transition: all 0.3s ease;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            /* 禁用安卓高亮效果 */
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+        }
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>计算器</h1>
+        <div class="calculator">
+            <div class="display" id="display">0</div>
+            <div class="buttons">
+                <button class="btn clear" onclick="clearDisplay()">C</button>
+                <button class="btn" onclick="appendToDisplay('%')">%</button>
+                <button class="btn" onclick="appendToDisplay('←')">←</button>
+                <button class="btn operator" onclick="appendToDisplay('/')">÷</button>
+                
+                <button class="btn" onclick="appendToDisplay('7')">7</button>
+                <button class="btn" onclick="appendToDisplay('8')">8</button>
+                <button class="btn" onclick="appendToDisplay('9')">9</button>
+                <button class="btn operator" onclick="appendToDisplay('*')">×</button>
+                
+                <button class="btn" onclick="appendToDisplay('4')">4</button>
+                <button class="btn" onclick="appendToDisplay('5')">5</button>
+                <button class="btn" onclick="appendToDisplay('6')">6</button>
+                <button class="btn operator" onclick="appendToDisplay('-')">−</button>
+                
+                <button class="btn" onclick="appendToDisplay('1')">1</button>
+                <button class="btn" onclick="appendToDisplay('2')">2</button>
+                <button class="btn" onclick="appendToDisplay('3')">3</button>
+                <button class="btn operator" onclick="appendToDisplay('+')">+</button>
+                
+                <button class="btn" onclick="appendToDisplay('0')">0</button>
+                <button class="btn" onclick="appendToDisplay('.')">.</button>
+                <button class="btn equals" onclick="calculate()">=</button>
+            </div>
+        </div>
+        <div class="copyright">
+            ©2025 bilibili/快手@旅游_LinYaOVO<br>
+            版权所有
+        </div>
+    </div>
+    <script>
+        function delayJump(element, delay) {
+            if (event.preventDefault) {
+                event.preventDefault();
+            } else {
+                event.returnValue = false;
+            }
+            setTimeout(() => {
+                window.location.href = element.getAttribute('href');
+            }, delay);
+            return false;
+        }
+        
+        let displayValue = '0';
+        const display = document.getElementById('display');
+        
+        function updateDisplay() {
+            display.textContent = displayValue;
+        }
+        
+        function appendToDisplay(value) {
+            if (displayValue === '0' && value !== '.') {
+                displayValue = value;
+            } else if (value === '←') {
+                displayValue = displayValue.length > 1 ? displayValue.slice(0, -1) : '0';
+            } else if (value === '%') {
+                try {
+                    displayValue = (parseFloat(displayValue) / 100).toString();
+                } catch (e) {
+                    displayValue = 'Error';
+                }
+            } else {
+                displayValue += value;
+            }
+            updateDisplay();
+        }
+        
+        function clearDisplay() {
+            displayValue = '0';
+            updateDisplay();
+        }
+        
+        function calculate() {
+            try {
+                let expression = displayValue.replace(/×/g, '*').replace(/÷/g, '/');
+                displayValue = eval(expression).toString();
+            } catch (e) {
+                displayValue = 'Error';
+            }
+            updateDisplay();
+        }
+        
+        updateDisplay();
+    </script>
+</body>
+</html>

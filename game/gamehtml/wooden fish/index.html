@@ -1,0 +1,196 @@
+<!-- 请使用UTF-8编码保存文件 -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>旅游的小网站-木鱼</title>
+    <style>
+        /* 完全保留你原来的CSS样式，一行不动 */
+        * {
+            margin: 0;
+            padding: 0;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0A2463;
+            background: -webkit-gradient(linear, top, bottom, from(#165DFF), color-stop(80%, #0A2463), to(#051540));
+            background: -webkit-linear-gradient(top, #165DFF, #0A2463 80%, #051540);
+            background: linear-gradient(to bottom, #165DFF, #0A2463 80%, #051540);
+            background-attachment: fixed;
+            color: white;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            padding: 20px;
+            text-align: center;
+        }
+        .wooden-fish {
+            display: block;
+            margin: 20px auto;
+            cursor: pointer;
+            position: relative;
+            background: inherit;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-transition: -webkit-transform 0.1s ease;
+            transition: transform 0.1s ease;
+        }
+        .wooden-fish.tapped {
+            -webkit-transform: scale(0.95);
+            transform: scale(0.95);
+        }
+        .wooden-fish img {
+            width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        .merit-item {
+            position: absolute;
+            left: 50%;
+            top: -10px;
+            -webkit-transform: translateX(-50%);
+            transform: translateX(-50%);
+            font-size: 14px;
+            font-weight: bold;
+            color: #ffffff;
+            text-shadow: 0 0 3px #ffff00;
+            opacity: 0;
+            filter: alpha(opacity=0);
+            pointer-events: none;
+        }
+        .count-box {
+            margin: 50px 0 30px;
+            font-size: 24px;
+        }
+        .main-game .wooden-fish {
+            width: 300px;
+            max-width: 90%;
+        }
+        .ranking-list {
+            margin: 60px 0 40px;
+            font-size: 16px;
+            color: rgba(255,255,255,0.8);
+        }
+        .copyright {
+            margin-top: 60px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+        }
+    </style>
+</head>
+<body>
+    <!-- 完全保留你原来的HTML结构，一行不动 -->
+    <div class="main-game">
+        <div class="count-box"><span id="count">0</span></div>
+        <div class="wooden-fish" id="fish">
+            <img src="wooden fish.png" alt="木鱼图片" />
+        </div>
+        <div class="ranking-list">
+            <div>排行榜（以后会添加）</div>
+            <div>no data</div>
+        </div>
+        <div class="copyright">
+            ©2025 bilibili/快手@旅游_LinYaOVO<br />版权所有
+        </div>
+    </div>
+    <script>
+        // 保留你原来的变量和核心逻辑，只改兼容点
+        var poolSize = 50;
+        var soundPool = [];
+        var meritPool = [];
+        var count = 0; // 先放内存，确保计数不依赖存储
+
+        // 初始化实例池（完全保留）
+        function initPools(size) {
+            soundPool = [];
+            meritPool = [];
+            for (var i = 0; i < size; i++) {
+                var sound = new Audio("wooden fish.mp3");
+                soundPool.push(sound);
+                
+                var merit = document.createElement("div");
+                merit.className = "merit-item";
+                merit.innerHTML = "功德+1";
+                merit.style.display = "none";
+                meritPool.push(merit);
+            }
+        }
+
+        // 初始化游戏（只改事件绑定和class操作）
+        function initMainGame() {
+            // 读取本地存储（加try-catch防拦截，不影响计数）
+            try {
+                var storedCount = localStorage.getItem('fishCount');
+                count = storedCount ? parseInt(storedCount) : 0;
+            } catch (e) { count = 0; }
+
+            var countEl = document.getElementById("count");
+            var fishEl = document.getElementById("fish");
+            countEl.innerHTML = count;
+            var currentIndex = 0;
+
+            // 【关键修复1】用最基础的onclick绑定，确保VIA识别
+            fishEl.onclick = function() {
+                // 【关键修复2】计数优先执行，不受任何操作影响
+                count++;
+                countEl.innerHTML = count;
+                // 存储容错（失败不影响计数）
+                try { localStorage.setItem('fishCount', count); } catch (e) {}
+
+                // 【关键修复3】用className替代classList（兼容旧浏览器）
+                this.className = "wooden-fish tapped"; // 替代classList.add
+                setTimeout(function() {
+                    fishEl.className = "wooden-fish"; // 替代classList.remove
+                }, 100);
+
+                // 以下完全保留你原来的逻辑（音频、动画）
+                var sound = soundPool[currentIndex];
+                sound.currentTime = 0;
+                sound.play && sound.play().catch(function(e) {});
+
+                var merit = meritPool[currentIndex];
+                fishEl.appendChild(merit);
+                merit.style.display = "block";
+                runMeritAnimation(merit, 0, function() {
+                    merit.style.display = "none";
+                });
+
+                currentIndex = (currentIndex + 1) % poolSize;
+            };
+        }
+
+        // 功德动画（完全保留你原来的逻辑）
+        var animationSteps = [
+            { fontSize: 11, top: -5, opacity: 50, duration: 50 },
+            { fontSize: 17, top: -18, opacity: 100, duration: 90 },
+            { fontSize: 17, top: -35, opacity: 90, duration: 110 },
+            { fontSize: 15, top: -55, opacity: 60, duration: 180 },
+            { fontSize: 12, top: -80, opacity: 0, duration: 200 }
+        ];
+
+        function runMeritAnimation(merit, stepIndex, onComplete) {
+            if (stepIndex >= animationSteps.length) {
+                onComplete && onComplete();
+                return;
+            }
+            var step = animationSteps[stepIndex];
+            merit.style.fontSize = step.fontSize + "px";
+            merit.style.top = step.top + "px";
+            merit.style.opacity = step.opacity / 100;
+            merit.style.filter = "alpha(opacity=" + step.opacity + ")";
+
+            setTimeout(function() {
+                runMeritAnimation(merit, stepIndex + 1, onComplete);
+            }, step.duration);
+        }
+
+        // 页面加载完初始化（保留）
+        window.onload = function() {
+            initPools(poolSize);
+            initMainGame();
+        };
+    </script>
+</body>
+</html>

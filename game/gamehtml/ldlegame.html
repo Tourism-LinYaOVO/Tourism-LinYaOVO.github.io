@@ -1,0 +1,266 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>旅游的小网站-挂机游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background: -webkit-linear-gradient(top, #165DFF, #0A2463 80%, #051540);
+            background: linear-gradient(to bottom, #165DFF, #0A2463 80%, #051540);
+            background-attachment: fixed;
+            background-size: cover;
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+        .game-container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .news-ticker {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .number-display {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+        .upgrade-card {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        .upgrade-header {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+        .upgrade-title {
+            display: table-cell;
+            vertical-align: middle;
+            font-size: 18px;
+            font-weight: bold;
+            padding-right: 10px;
+        }
+        .buy-btn {
+            display: table-cell;
+            vertical-align: middle;
+            background: #165DFF;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            text-align: right;
+        }
+        .buy-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .multiplier-select {
+            padding: 5px;
+            margin: 10px 0;
+            background: transparent;
+            border: 2px solid white;
+            border-radius: 5px;
+            color: white;
+            width: 100%;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="news-ticker">
+            <marquee scrollamount="3" behavior="scroll" id="tickerContent">
+                你发现一个网站只要停留一秒就给一块钱，你不敢将这个消息散播出去，自己安心的用着。 股市｜二手电脑市场目前稳定，可以去买台亲戚的旧电脑，虽然有点烂，只能开一个网页。
+            </marquee>
+        </div>
+        
+        <h1>挂机游戏</h1>
+        <div class="number-display" id="score">0</div>
+        
+        <div class="info-text">
+            每秒自动增长: <span id="autoGain">0</span> (基础值 × 数量)
+        </div>
+        
+        <div class="upgrades">
+            <div class="upgrade-card" id="upgradeCard">
+                <div class="upgrade-header">
+                    <div class="upgrade-title">亲戚的旧电脑</div>
+                    <button class="buy-btn" id="buyBtn" onclick="buyUpgrade()">购买 (120$)</button>
+                </div>
+                <div class="upgrade-desc">介绍: 虽然有点烂，只能开一个网页。</div>
+                <div class="longpress-hint">长按可以选择购买次数</div>
+                <select class="multiplier-select" id="multiplier" onchange="updateCost()">
+                    <option value="1">×1（花费120$）</option>
+                    <option value="5">×5（花费600$）</option>
+                    <option value="10">×10（花费1200$）</option>
+                    <option value="max">Max（花费全部）</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="copyright">
+            ©2025 bilibili/快手@旅游_LinYaOVO<br>
+            版权所有
+        </div>
+    </div>
+    <script>
+        // 设备判断（兼容安卓4）
+        function isDesktop() {
+            var ua = navigator.userAgent.toLowerCase();
+            return /windows|macintosh|linux/.test(ua) && !/mobile|android|iphone|ipad/.test(ua);
+        }
+        document.body.className = isDesktop() ? 'is-desktop' : 'is-mobile';
+
+        // 游戏数据初始化
+        var gameData = {
+            score: 0,
+            baseGain: 1,
+            count: 0,
+            lastUpdate: Date.now()
+        };
+
+        // DOM元素
+        var scoreEl = document.getElementById('score');
+        var autoGainEl = document.getElementById('autoGain');
+        var buyBtn = document.getElementById('buyBtn');
+        var multiplier = document.getElementById('multiplier');
+        var tickerContent = document.getElementById('tickerContent');
+
+        // 长按事件处理
+        var longPressTimer = null;
+        var isLongPress = false;
+
+        document.getElementById('upgradeCard').ontouchstart = function(e) {
+            isLongPress = false;
+            longPressTimer = setTimeout(function() {
+                isLongPress = true;
+                multiplier.style.display = 'block';
+            }, 500);
+            e.preventDefault();
+        };
+
+        document.getElementById('upgradeCard').ontouchend = function(e) {
+            clearTimeout(longPressTimer);
+            if (!isLongPress) {
+                multiplier.style.display = 'none';
+            }
+            e.preventDefault();
+        };
+
+        document.getElementById('upgradeCard').ontouchcancel = function() {
+            clearTimeout(longPressTimer);
+            multiplier.style.display = 'none';
+        };
+
+        // 计算每秒收益
+        function getAutoGain() {
+            return gameData.baseGain + gameData.count;
+        }
+
+        // 更新滚动条内容
+        function updateTicker() {
+            tickerContent.innerHTML = gameData.count === 0 ? 
+                "你发现一个网站只要停留一秒就给一块钱，你不敢将这个消息散播出去，自己安心的用着。 股市｜二手电脑市场目前稳定，可以去买台亲戚的旧电脑，虽然有点烂，只能开一个网页。" :
+                "目前还没做好，敬请期待";
+        }
+
+        // 更新显示
+        function updateDisplay() {
+            scoreEl.textContent = Math.floor(gameData.score) + '$';
+            autoGainEl.textContent = getAutoGain() + '$';
+            updateTicker();
+            updateCost();
+        }
+
+        // 更新购买成本显示
+        function updateCost() {
+            var cost = getCost(multiplier.value);
+            buyBtn.textContent = `购买 (${cost}$)`;
+            buyBtn.disabled = gameData.score < cost;
+        }
+
+        // 计算购买成本
+        function getCost(multi) {
+            var unit = 120;
+            if (multi === 'max') {
+                return Math.floor(gameData.score / unit) * unit;
+            } else {
+                return unit * parseInt(multi, 10);
+            }
+        }
+
+        // 购买升级
+        function buyUpgrade() {
+            var multi = multiplier.value;
+            var cost = getCost(multi);
+            if (gameData.score < cost || cost <= 0) return;
+
+            var count = Math.floor(cost / 120);
+            gameData.score -= cost;
+            gameData.count += count;
+
+            // 数据持久化
+            localStorage.setItem('idleGameData', JSON.stringify(gameData));
+            updateDisplay();
+            multiplier.style.display = 'none';
+        }
+
+        // 初始化数据
+        function loadData() {
+            try {
+                var saved = localStorage.getItem('idleGameData');
+                if (saved) {
+                    var parsed = JSON.parse(saved);
+                    gameData = {
+                        score: Math.max(0, parsed.score),
+                        baseGain: Math.max(1, parsed.baseGain),
+                        count: Math.max(0, parsed.count),
+                        lastUpdate: parsed.lastUpdate || Date.now()
+                    };
+                }
+            } catch (e) {
+                localStorage.removeItem('idleGameData');
+            }
+        }
+
+        // 自动增长处理
+        function autoUpdate() {
+            setInterval(function() {
+                gameData.score += getAutoGain();
+                localStorage.setItem('idleGameData', JSON.stringify(gameData));
+                updateDisplay();
+            }, 1000);
+        }
+
+        // 初始化
+        loadData();
+        updateDisplay();
+        autoUpdate();
+    </script>
+</body>
+</html>

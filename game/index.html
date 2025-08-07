@@ -1,0 +1,117 @@
+<!-- 请使用UTF-8编码保存文件 -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旅游的小网站-游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0A2463;
+            background: -webkit-gradient(linear, top, bottom, from(#165DFF), color-stop(80%, #0A2463), to(#051540));
+            background: -webkit-linear-gradient(top, #165DFF, #0A2463 80%, #051540);
+            background: linear-gradient(to bottom, #165DFF, #0A2463 80%, #051540);
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            background-size: cover;
+            color: white;
+            min-height: 100vh;
+            font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -webkit-flex-direction: column;
+            flex-direction: column;
+            padding: 20px 0;
+        }
+        .container {
+            width: 90%;
+            max-width: 500px;
+            margin: 0 auto;
+            text-align: center;
+            -webkit-box-flex: 1;
+            -webkit-flex: 1;
+            flex: 1;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -webkit-flex-direction: column;
+            flex-direction: column;
+            justify-content: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .game-list {
+            margin: 20px 0;
+        }
+        .game-btn {
+            display: block;
+            width: 80%;
+            max-width: 300px;
+            margin: 12px auto;
+            padding: 12px 0;
+            border: 2px solid white;
+            border-radius: 50px;
+            color: white;
+            font-size: 16px;
+            background: transparent;
+            -webkit-transition: all 0.3s ease;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .game-btn:hover, .game-btn:active {
+            background: white;
+            color: #165DFF;
+            -webkit-transform: scale(1.05);
+            transform: scale(1.05);
+        }
+        .copyright {
+            margin-top: 40px;
+            padding: 10px 0;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>旅游的小网站-游戏</h1>
+        <div class="game-list">
+            <a href="gamehtml/wooden fish/index.html" class="game-btn" onclick="return delayJump(this, 300)">木鱼</a>
+            <!-- 新增挂机游戏入口 -->
+            <a href="gamehtml/ldlegame.html" class="game-btn" onclick="return delayJump(this, 300)">挂机游戏</a>
+        </div>
+        <div class="copyright">
+            ©2025 bilibili/快手@旅游_LinYaOVO<br>
+            版权所有
+        </div>
+    </div>
+    <script>
+        function delayJump(element, delay) {
+            if (event.preventDefault) {
+                event.preventDefault();
+            } else {
+                event.returnValue = false;
+            }
+            setTimeout(() => {
+                window.location.href = element.getAttribute('href');
+            }, delay);
+            return false;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!-- 在MT管理器中编辑时，务必选择“UTF-8无BOM”编码保存 -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旅游的小网站-资源</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(to bottom, #165DFF, #0A2463 80%, #051540);
+            background-attachment: fixed;
+            color: white;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            padding: 20px 0;
+            /* 垂直布局容器，支撑内容居中 */
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -webkit-flex-direction: column;
+            flex-direction: column;
+        }
+        .container {
+            width: 90%;
+            max-width: 500px;
+            margin: 0 auto;
+            text-align: center;
+            /* 占据剩余空间并垂直居中内容 */
+            -webkit-box-flex: 1;
+            -webkit-flex: 1;
+            flex: 1;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: flex;
+            -webkit-box-orient: vertical;
+            -webkit-box-direction: normal;
+            -webkit-flex-direction: column;
+            flex-direction: column;
+            justify-content: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 26px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .tool-list { margin: 25px 0; }
+        .tool-btn {
+            display: block;
+            width: 80%;
+            max-width: 300px;
+            margin: 16px auto;
+            padding: 14px 0;
+            border: 2px solid rgba(255,255,255,0.8);
+            border-radius: 50px;
+            color: white;
+            font-size: 18px;
+            background: transparent;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            /* 禁用安卓默认点击高亮 */
+            -webkit-tap-highlight-color: transparent;
+        }
+        .tool-btn:after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+        .tool-btn:hover:after { left: 100%; }
+        .tool-btn:hover {
+            background: rgba(255,255,255,0.9);
+            color: #165DFF;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .copyright {
+            margin-top: 30px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>旅游的小网站-资源</h1>
+        <div class="tool-list">
+            <a href="/resources/tourism_keybind_pack/index.html" class="tool-btn" onclick="return delayJump(this, 300)">旅游的键位整合包</a>
+        </div>
+        <div class="copyright">
+            ©2025 bilibili/快手@旅游_LinYaOVO<br>
+            版权所有
+        </div>
+    </div>
+    <script>
+        function delayJump(element, delay) {
+            event.preventDefault ? event.preventDefault() : (event.returnValue = false);
+            setTimeout(() => { window.location.href = element.href; }, delay);
+            return false;
+        }
+    </script>
+</body>
+</html>
