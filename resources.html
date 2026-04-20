@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TourTi的资源库</title>
+    <meta charset="utf-8">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .intro {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .file-grid {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .file-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #e1e4e8;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .file-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-color: #4a90e2;
+        }
+        
+        .file-icon {
+            font-size: 24px;
+            width: 50px;
+            text-align: center;
+            margin-right: 15px;
+        }
+        
+        .file-content {
+            flex: 1;
+        }
+        
+        .file-name {
+            font-weight: 600;
+            color: #0366d6;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+        
+        .file-desc {
+            color: #586069;
+            font-size: 0.9em;
+        }
+        
+        .file-size {
+            color: #6a737d;
+            font-size: 0.85em;
+            min-width: 80px;
+            text-align: right;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .error {
+            background: #ffe6e6;
+            border: 1px solid #ffcccc;
+            color: #cc0000;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #999;
+            font-size: 0.9em;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>TourTi的资源站</h1>
+        <p class="intro">这里只是存储我要存的东西，方便取用；你要用也行。</p>
+    </header>
+    
+    <main>
+        <!-- 加载状态 -->
+        <div id="loading" class="loading">
+            <p>正在加载文件列表...</p>
+        </div>
+        
+        <!-- 错误提示 -->
+        <div id="error" class="error" style="display: none;">
+            <p>无法加载文件列表，请检查网络连接或刷新页面重试。</p>
+        </div>
+        
+        <!-- 文件列表容器 -->
+        <div id="fileContainer" class="file-grid" style="display: none;"></div>
+    </main>
+    
+    <footer>
+        <p>最后更新: <span id="lastUpdated">今天</span> | 共 <span id="fileCount">0</span> 个文件</p>
+    </footer>
+    
+    <script>
+        // 根据文件扩展名获取对应的图标
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const icons = {
+                'pdf': '📄',
+                'zip': '📦',
+                'rar': '📦',
+                '7z': '📦',
+                'mp4': '🎬',
+                'mp3': '🎵',
+                'jpg': '🖼️',
+                'jpeg': '🖼️',
+                'png': '🖼️',
+                'gif': '🖼️',
+                'doc': '📝',
+                'docx': '📝',
+                'xls': '📊',
+                'xlsx': '📊',
+                'ppt': '📽️',
+                'pptx': '📽️',
+                'txt': '📃',
+                'md': '📄',
+                'js': '💻',
+                'html': '🌐',
+                'css': '🎨',
+                'json': '⚙️',
+                'yml': '⚙️',
+                'yaml': '⚙️',
+                'psd': '🎨',
+                'ai': '🎨',
+                'sketch': '🎨'
+            };
+            return icons[ext] || '📁';
+        }
+        
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (!bytes || isNaN(bytes)) return '--';
+            
+            const units = ['B', 'KB', 'MB', 'GB'];
+            let size = bytes;
+            let unitIndex = 0;
+            
+            while (size >= 1024 && unitIndex < units.length - 1) {
+                size /= 1024;
+                unitIndex++;
+            }
+            
+            return `${size.toFixed(1)} ${units[unitIndex]}`;
+        }
+        
+        // 获取单个文件的大小
+        async function getFileSize(filename) {
+            try {
+                const response = await fetch(`files/${filename}`, { method: 'HEAD' });
+                if (response.ok) {
+                    const size = response.headers.get('content-length');
+                    return size ? parseInt(size) : null;
+                }
+                return null;
+            } catch (error) {
+                console.warn(`无法获取文件大小: ${filename}`, error);
+                return null;
+            }
+        }
+        
+        // 批量获取文件大小
+        async function getFileSizes(fileList) {
+            const filesWithSizes = [];
+            
+            for (const file of fileList) {
+                const size = await getFileSize(file.name);
+                filesWithSizes.push({
+                    ...file,
+                    size: size
+                });
+            }
+            
+            return filesWithSizes;
+        }
+        
+        // 渲染文件列表
+        function renderFileList(files) {
+            const container = document.getElementById('fileContainer');
+            const fileCount = document.getElementById('fileCount');
+            const lastUpdated = document.getElementById('lastUpdated');
+            
+            // 更新计数
+            fileCount.textContent = files.length;
+            
+            // 更新最后更新日期
+            const now = new Date();
+            lastUpdated.textContent = now.toLocaleDateString('zh-CN');
+            
+            // 清空容器
+            container.innerHTML = '';
+            
+            // 创建文件卡片
+            files.forEach(file => {
+                const card = document.createElement('a');
+                card.href = `files/${encodeURIComponent(file.name)}`;
+                card.className = 'file-card';
+                card.target = '_blank';
+                
+                const icon = getFileIcon(file.name);
+                const formattedSize = file.size ? formatFileSize(file.size) : '--';
+                
+                card.innerHTML = `
+                    <div class="file-icon">${icon}</div>
+                    <div class="file-content">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-desc">${file.description || '无描述'}</div>
+                    </div>
+                    <div class="file-size">${formattedSize}</div>
+                `;
+                
+                container.appendChild(card);
+            });
+            
+            // 显示文件列表
+            document.getElementById('loading').style.display = 'none';
+            container.style.display = 'grid';
+        }
+        
+        // 主函数
+        async function loadFileList() {
+            try {
+                // 1. 加载 JSON 配置文件
+                const response = await fetch('file-list.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const config = await response.json();
+                
+                // 2. 获取所有文件的大小
+                const filesWithSizes = await getFileSizes(config.files);
+                
+                // 3. 渲染文件列表
+                renderFileList(filesWithSizes);
+                
+            } catch (error) {
+                console.error('加载文件列表失败:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+            }
+        }
+        
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', loadFileList);
+    </script>
+</body>
+</html>
