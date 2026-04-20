@@ -1,357 +1,92 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>TourTi的资源库</title>
+    <title>TourTi的资源站</title>
     <meta charset="utf-8">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f8f9fa;
-        }
-        
-        header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding: 20px 0;
-        }
-        
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-        
-        .intro {
-            color: #666;
-            font-size: 1.1em;
-        }
-        
-        .file-grid {
-            display: grid;
-            gap: 15px;
-        }
-        
-        .file-card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            border: 1px solid #e1e4e8;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-            color: inherit;
-        }
-        
-        .file-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            border-color: #4a90e2;
-        }
-        
-        .file-icon {
-            font-size: 24px;
-            width: 50px;
-            text-align: center;
-            margin-right: 15px;
-        }
-        
-        .file-content {
-            flex: 1;
-        }
-        
-        .file-name {
-            font-weight: 600;
-            color: #0366d6;
-            font-size: 1.1em;
-            margin-bottom: 5px;
-        }
-        
-        .file-desc {
-            color: #586069;
-            font-size: 0.9em;
-        }
-        
-        .file-size {
-            color: #6a737d;
-            font-size: 0.85em;
-            min-width: 80px;
-            text-align: right;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-        }
-        
-        .error {
-            background: #ffe6e6;
-            border: 1px solid #ffcccc;
-            color: #cc0000;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-        
-        footer {
-            margin-top: 40px;
-            text-align: center;
-            color: #999;
-            font-size: 0.9em;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-        }
-    </style>
 </head>
 <body>
-    <header>
-        <h1>TourTi的资源站</h1>
-        <p class="intro">这里只是存储我要存的东西，方便取用；你要用也行。</p>
-    </header>
+    <h1>TourTi的资源站</h1>
+    <p>这里只是存放一些我需要存储的东西，你要用也行。</p>
     
-    <main>
-        <!-- 加载状态 -->
-        <div id="loading" class="loading">
-            <p>正在加载文件列表...</p>
-        </div>
-        
-        <!-- 错误提示 -->
-        <div id="error" class="error" style="display: none;">
-            <p>无法加载文件列表，请检查网络连接或刷新页面重试。</p>
-        </div>
-        
-        <!-- 文件列表容器 -->
-        <div id="fileContainer" class="file-grid" style="display: none;"></div>
-    </main>
+    <div id="loading">加载中...</div>
+    <div id="error" style="display:none; color:red;"></div>
+    <ul id="fileList"></ul>
     
-    <footer>
-        <p>最后更新: <span id="lastUpdated">今天</span> | 共 <span id="fileCount">0</span> 个文件</p>
-    </footer>
+    <div>最后更新: <span id="lastUpdated">-</span> | 共 <span id="fileCount">0</span> 个文件</div>
     
     <script>
-        // 根据文件扩展名获取对应的图标
-        function getFileIcon(filename) {
-            const ext = filename.split('.').pop().toLowerCase();
-            const icons = {
-                'pdf': '📄',
-                'zip': '📦',
-                'rar': '📦',
-                '7z': '📦',
-                'mp4': '🎬',
-                'mp3': '🎵',
-                'jpg': '🖼️',
-                'jpeg': '🖼️',
-                'png': '🖼️',
-                'gif': '🖼️',
-                'doc': '📝',
-                'docx': '📝',
-                'xls': '📊',
-                'xlsx': '📊',
-                'ppt': '📽️',
-                'pptx': '📽️',
-                'txt': '📃',
-                'md': '📄',
-                'js': '💻',
-                'html': '🌐',
-                'css': '🎨',
-                'json': '⚙️',
-                'yml': '⚙️',
-                'yaml': '⚙️',
-                'psd': '🎨',
-                'ai': '🎨',
-                'sketch': '🎨'
-            };
-            return icons[ext] || '📁';
-        }
-        
-        // 格式化文件大小
-        function formatFileSize(bytes) {
-            if (!bytes || isNaN(bytes)) return '--';
-            
-            const units = ['B', 'KB', 'MB', 'GB'];
-            let size = bytes;
-            let unitIndex = 0;
-            
-            while (size >= 1024 && unitIndex < units.length - 1) {
-                size /= 1024;
-                unitIndex++;
-            }
-            
-            return `${size.toFixed(1)} ${units[unitIndex]}`;
-        }
-        
-        // 主函数 - 用户站点优化版
+        // 主函数
         async function loadFileList() {
             const loadingEl = document.getElementById('loading');
             const errorEl = document.getElementById('error');
+            const fileListEl = document.getElementById('fileList');
+            const fileCountEl = document.getElementById('fileCount');
+            const lastUpdatedEl = document.getElementById('lastUpdated');
             
             try {
-                console.log('🚀 开始加载文件列表...');
-                console.log('📁 当前URL:', window.location.href);
-                console.log('📁 当前路径:', window.location.pathname);
-                
-                // 1. 加载 JSON 文件 - 用户站点专用逻辑
-                // 用户站点: https://用户名.github.io/
-                // 不需要仓库名前缀
+                // 1. 尝试不同的JSON文件路径
                 const jsonPaths = [
-                    'file-list.json',      // 相对路径
-                    './file-list.json',    // 当前目录
-                    '/file-list.json'      // 根目录
+                    'file-list.json',
+                    './file-list.json',
+                    '/file-list.json'
                 ];
                 
                 let response = null;
                 let usedPath = '';
                 
-                // 尝试所有可能的路径
                 for (const path of jsonPaths) {
                     try {
-                        console.log('尝试JSON路径:', path);
                         response = await fetch(path);
                         if (response.ok) {
                             usedPath = path;
-                            console.log('✅ JSON加载成功:', path);
                             break;
                         }
                     } catch (e) {
-                        console.log('路径失败:', path);
+                        // 继续尝试下一个路径
                     }
                 }
                 
                 if (!response || !response.ok) {
-                    throw new Error(`无法加载 file-list.json (尝试了: ${jsonPaths.join(', ')})`);
+                    throw new Error('无法加载 file-list.json');
                 }
                 
                 const config = await response.json();
                 
                 if (!config.files || !Array.isArray(config.files)) {
-                    throw new Error('JSON 格式错误: 缺少 files 数组');
+                    throw new Error('JSON格式错误: 缺少files数组');
                 }
                 
-                console.log(`📊 找到 ${config.files.length} 个文件`);
+                // 2. 清空加载提示
+                loadingEl.style.display = 'none';
                 
-                // 2. 获取文件大小和URL
-                const filePromises = config.files.map(async (file) => {
-                    const fileUrls = [
-                        `files/${file.name}`,      // 相对路径
-                        `./files/${file.name}`,    // 当前目录
-                        `/files/${file.name}`      // 根目录
-                    ];
+                // 3. 更新文件计数
+                fileCountEl.textContent = config.files.length;
+                lastUpdatedEl.textContent = new Date().toLocaleDateString('zh-CN');
+                
+                // 4. 显示文件列表
+                config.files.forEach(file => {
+                    const listItem = document.createElement('li');
+                    const link = document.createElement('a');
+                    link.href = `files/${encodeURIComponent(file.name)}`;
+                    link.textContent = file.name;
                     
-                    let fileSize = null;
-                    let fileUrl = fileUrls[0]; // 默认使用第一个
-                    
-                    // 尝试获取文件大小
-                    for (const url of fileUrls) {
-                        try {
-                            const fileResponse = await fetch(url, { method: 'HEAD' });
-                            if (fileResponse.ok) {
-                                const size = fileResponse.headers.get('content-length');
-                                fileSize = size ? parseInt(size) : null;
-                                fileUrl = url; // 使用成功的URL
-                                break;
-                            }
-                        } catch (e) {
-                            continue; // 继续尝试下一个URL
-                        }
+                    if (file.description) {
+                        const desc = document.createElement('span');
+                        desc.textContent = ` - ${file.description}`;
+                        desc.style.color = '#666';
+                        link.appendChild(desc);
                     }
                     
-                    return {
-                        ...file,
-                        size: fileSize,
-                        url: fileUrl
-                    };
+                    listItem.appendChild(link);
+                    fileListEl.appendChild(listItem);
                 });
                 
-                const filesWithDetails = await Promise.all(filePromises);
-                
-                // 3. 渲染文件列表
-                renderFileList(filesWithDetails);
-                
             } catch (error) {
-                console.error('❌ 加载失败:', error);
                 loadingEl.style.display = 'none';
                 errorEl.style.display = 'block';
-                errorEl.innerHTML = `
-                    <h3>😕 加载失败</h3>
-                    <p><strong>错误:</strong> ${error.message}</p>
-                    <hr>
-                    <p>可能的原因：</p>
-                    <ul>
-                        <li><code>file-list.json</code> 文件不存在</li>
-                        <li>JSON 格式不正确</li>
-                        <li>网络连接问题</li>
-                        <li>GitHub Pages 还在部署中（等待1-2分钟）</li>
-                    </ul>
-                    <p>请确保：</p>
-                    <ol>
-                        <li><code>file-list.json</code> 文件在仓库根目录</li>
-                        <li>JSON 格式正确（可使用 <a href="https://jsonlint.com" target="_blank">JSONLint</a> 验证）</li>
-                        <li><code>files/</code> 文件夹存在且包含文件</li>
-                    </ol>
-                    <p><strong>当前页面:</strong> ${window.location.href}</p>
-                    <button onclick="location.reload()" style="padding: 8px 16px; margin-top: 10px;">
-                        🔄 刷新页面
-                    </button>
-                `;
+                errorEl.textContent = `错误: ${error.message}`;
+                console.error('加载失败:', error);
             }
-        }
-        
-        // 渲染函数
-        function renderFileList(files) {
-            const container = document.getElementById('fileContainer');
-            const fileCount = document.getElementById('fileCount');
-            const lastUpdated = document.getElementById('lastUpdated');
-            const loadingEl = document.getElementById('loading');
-            
-            // 更新计数
-            fileCount.textContent = files.length;
-            
-            // 更新最后更新日期
-            const now = new Date();
-            lastUpdated.textContent = now.toLocaleDateString('zh-CN');
-            
-            // 清空容器
-            container.innerHTML = '';
-            
-            // 创建文件卡片
-            files.forEach(file => {
-                const card = document.createElement('a');
-                card.href = file.url;
-                card.className = 'file-card';
-                card.target = '_blank';
-                card.download = file.name; // 添加下载属性
-                
-                const icon = getFileIcon(file.name);
-                const size = file.size ? formatFileSize(file.size) : '--';
-                
-                card.innerHTML = `
-                    <div class="file-icon">${icon}</div>
-                    <div class="file-content">
-                        <div class="file-name">${file.name}</div>
-                        <div class="file-desc">${file.description || '无描述'}</div>
-                    </div>
-                    <div class="file-size">${size}</div>
-                `;
-                
-                container.appendChild(card);
-            });
-            
-            // 显示文件列表
-            loadingEl.style.display = 'none';
-            container.style.display = 'grid';
-            
-            console.log('🎉 文件列表渲染完成，共', files.length, '个文件');
         }
         
         // 页面加载完成后执行
