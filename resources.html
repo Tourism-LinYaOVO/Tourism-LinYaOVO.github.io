@@ -6,15 +6,41 @@
 </head>
 <body>
     <h1>TourTi的资源站</h1>
-    <p>这里只是存放一些我需要存储的东西，你要用也行。</p>
+    <p>这里只是存储我要存的东西，方便取用；你要用也行。</p>
     
-    <div id="loading">加载中...</div>
-    <div id="error" style="display:none; color:red;"></div>
+    <div id="loading">正在加载文件列表...</div>
+    <div id="error" style="display:none; color:red; border:1px solid red; padding:10px;"></div>
     <ul id="fileList"></ul>
     
-    <div>最后更新: <span id="lastUpdated">-</span> | 共 <span id="fileCount">0</span> 个文件</div>
+    <div>共 <span id="fileCount">0</span> 个文件 | 最后更新: <span id="lastUpdated">-</span></div>
     
     <script>
+        // 格式化文件大小为人类可读格式
+        function formatFileSize(bytes) {
+            if (!bytes || bytes === 0) return '0 B';
+            
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // 获取文件大小
+        async function getFileSize(filename) {
+            try {
+                const response = await fetch(`files/${filename}`, { method: 'HEAD' });
+                if (response.ok) {
+                    const size = response.headers.get('content-length');
+                    return size ? parseInt(size) : null;
+                }
+                return null;
+            } catch (error) {
+                console.warn(`无法获取文件大小: ${filename}`, error);
+                return null;
+            }
+        }
+        
         // 主函数
         async function loadFileList() {
             const loadingEl = document.getElementById('loading');
@@ -32,13 +58,11 @@
                 ];
                 
                 let response = null;
-                let usedPath = '';
                 
                 for (const path of jsonPaths) {
                     try {
                         response = await fetch(path);
                         if (response.ok) {
-                            usedPath = path;
                             break;
                         }
                     } catch (e) {
@@ -63,28 +87,51 @@
                 fileCountEl.textContent = config.files.length;
                 lastUpdatedEl.textContent = new Date().toLocaleDateString('zh-CN');
                 
-                // 4. 显示文件列表
-                config.files.forEach(file => {
+                // 4. 显示文件列表，包含文件大小
+                for (const file of config.files) {
                     const listItem = document.createElement('li');
+                    
+                    // 获取文件大小
+                    const fileSize = await getFileSize(file.name);
+                    const sizeText = fileSize ? ` (${formatFileSize(fileSize)})` : '';
+                    
+                    // 创建文件链接
                     const link = document.createElement('a');
                     link.href = `files/${encodeURIComponent(file.name)}`;
                     link.textContent = file.name;
                     
+                    // 将链接和大小添加到列表项
+                    listItem.appendChild(link);
+                    
+                    // 如果有描述，添加描述
                     if (file.description) {
                         const desc = document.createElement('span');
                         desc.textContent = ` - ${file.description}`;
                         desc.style.color = '#666';
-                        link.appendChild(desc);
+                        listItem.appendChild(desc);
                     }
                     
-                    listItem.appendChild(link);
+                    // 添加文件大小
+                    const sizeSpan = document.createElement('span');
+                    sizeSpan.textContent = sizeText;
+                    sizeSpan.style.color = '#888';
+                    sizeSpan.style.fontSize = '0.9em';
+                    sizeSpan.style.marginLeft = '8px';
+                    listItem.appendChild(sizeSpan);
+                    
                     fileListEl.appendChild(listItem);
-                });
+                }
                 
             } catch (error) {
                 loadingEl.style.display = 'none';
                 errorEl.style.display = 'block';
-                errorEl.textContent = `错误: ${error.message}`;
+                errorEl.innerHTML = `
+                    错误: ${error.message}<br><br>
+                    请检查：
+                    1. file-list.json 文件是否存在
+                    2. JSON 格式是否正确
+                    3. 文件名是否完全匹配
+                `;
                 console.error('加载失败:', error);
             }
         }
