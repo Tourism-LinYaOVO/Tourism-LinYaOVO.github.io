@@ -191,41 +191,128 @@
             return `${size.toFixed(1)} ${units[unitIndex]}`;
         }
         
-        // 获取单个文件的大小
-        async function getFileSize(filename) {
+        // 主函数 - 用户站点优化版
+        async function loadFileList() {
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('error');
+            
             try {
-                const response = await fetch(`files/${filename}`, { method: 'HEAD' });
-                if (response.ok) {
-                    const size = response.headers.get('content-length');
-                    return size ? parseInt(size) : null;
+                console.log('🚀 开始加载文件列表...');
+                console.log('📁 当前URL:', window.location.href);
+                console.log('📁 当前路径:', window.location.pathname);
+                
+                // 1. 加载 JSON 文件 - 用户站点专用逻辑
+                // 用户站点: https://用户名.github.io/
+                // 不需要仓库名前缀
+                const jsonPaths = [
+                    'file-list.json',      // 相对路径
+                    './file-list.json',    // 当前目录
+                    '/file-list.json'      // 根目录
+                ];
+                
+                let response = null;
+                let usedPath = '';
+                
+                // 尝试所有可能的路径
+                for (const path of jsonPaths) {
+                    try {
+                        console.log('尝试JSON路径:', path);
+                        response = await fetch(path);
+                        if (response.ok) {
+                            usedPath = path;
+                            console.log('✅ JSON加载成功:', path);
+                            break;
+                        }
+                    } catch (e) {
+                        console.log('路径失败:', path);
+                    }
                 }
-                return null;
-            } catch (error) {
-                console.warn(`无法获取文件大小: ${filename}`, error);
-                return null;
-            }
-        }
-        
-        // 批量获取文件大小
-        async function getFileSizes(fileList) {
-            const filesWithSizes = [];
-            
-            for (const file of fileList) {
-                const size = await getFileSize(file.name);
-                filesWithSizes.push({
-                    ...file,
-                    size: size
+                
+                if (!response || !response.ok) {
+                    throw new Error(`无法加载 file-list.json (尝试了: ${jsonPaths.join(', ')})`);
+                }
+                
+                const config = await response.json();
+                
+                if (!config.files || !Array.isArray(config.files)) {
+                    throw new Error('JSON 格式错误: 缺少 files 数组');
+                }
+                
+                console.log(`📊 找到 ${config.files.length} 个文件`);
+                
+                // 2. 获取文件大小和URL
+                const filePromises = config.files.map(async (file) => {
+                    const fileUrls = [
+                        `files/${file.name}`,      // 相对路径
+                        `./files/${file.name}`,    // 当前目录
+                        `/files/${file.name}`      // 根目录
+                    ];
+                    
+                    let fileSize = null;
+                    let fileUrl = fileUrls[0]; // 默认使用第一个
+                    
+                    // 尝试获取文件大小
+                    for (const url of fileUrls) {
+                        try {
+                            const fileResponse = await fetch(url, { method: 'HEAD' });
+                            if (fileResponse.ok) {
+                                const size = fileResponse.headers.get('content-length');
+                                fileSize = size ? parseInt(size) : null;
+                                fileUrl = url; // 使用成功的URL
+                                break;
+                            }
+                        } catch (e) {
+                            continue; // 继续尝试下一个URL
+                        }
+                    }
+                    
+                    return {
+                        ...file,
+                        size: fileSize,
+                        url: fileUrl
+                    };
                 });
+                
+                const filesWithDetails = await Promise.all(filePromises);
+                
+                // 3. 渲染文件列表
+                renderFileList(filesWithDetails);
+                
+            } catch (error) {
+                console.error('❌ 加载失败:', error);
+                loadingEl.style.display = 'none';
+                errorEl.style.display = 'block';
+                errorEl.innerHTML = `
+                    <h3>😕 加载失败</h3>
+                    <p><strong>错误:</strong> ${error.message}</p>
+                    <hr>
+                    <p>可能的原因：</p>
+                    <ul>
+                        <li><code>file-list.json</code> 文件不存在</li>
+                        <li>JSON 格式不正确</li>
+                        <li>网络连接问题</li>
+                        <li>GitHub Pages 还在部署中（等待1-2分钟）</li>
+                    </ul>
+                    <p>请确保：</p>
+                    <ol>
+                        <li><code>file-list.json</code> 文件在仓库根目录</li>
+                        <li>JSON 格式正确（可使用 <a href="https://jsonlint.com" target="_blank">JSONLint</a> 验证）</li>
+                        <li><code>files/</code> 文件夹存在且包含文件</li>
+                    </ol>
+                    <p><strong>当前页面:</strong> ${window.location.href}</p>
+                    <button onclick="location.reload()" style="padding: 8px 16px; margin-top: 10px;">
+                        🔄 刷新页面
+                    </button>
+                `;
             }
-            
-            return filesWithSizes;
         }
         
-        // 渲染文件列表
+        // 渲染函数
         function renderFileList(files) {
             const container = document.getElementById('fileContainer');
             const fileCount = document.getElementById('fileCount');
             const lastUpdated = document.getElementById('lastUpdated');
+            const loadingEl = document.getElementById('loading');
             
             // 更新计数
             fileCount.textContent = files.length;
@@ -240,12 +327,13 @@
             // 创建文件卡片
             files.forEach(file => {
                 const card = document.createElement('a');
-                card.href = `files/${encodeURIComponent(file.name)}`;
+                card.href = file.url;
                 card.className = 'file-card';
                 card.target = '_blank';
+                card.download = file.name; // 添加下载属性
                 
                 const icon = getFileIcon(file.name);
-                const formattedSize = file.size ? formatFileSize(file.size) : '--';
+                const size = file.size ? formatFileSize(file.size) : '--';
                 
                 card.innerHTML = `
                     <div class="file-icon">${icon}</div>
@@ -253,39 +341,17 @@
                         <div class="file-name">${file.name}</div>
                         <div class="file-desc">${file.description || '无描述'}</div>
                     </div>
-                    <div class="file-size">${formattedSize}</div>
+                    <div class="file-size">${size}</div>
                 `;
                 
                 container.appendChild(card);
             });
             
             // 显示文件列表
-            document.getElementById('loading').style.display = 'none';
+            loadingEl.style.display = 'none';
             container.style.display = 'grid';
-        }
-        
-        // 主函数
-        async function loadFileList() {
-            try {
-                // 1. 加载 JSON 配置文件
-                const response = await fetch('file-list.json');
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                
-                const config = await response.json();
-                
-                // 2. 获取所有文件的大小
-                const filesWithSizes = await getFileSizes(config.files);
-                
-                // 3. 渲染文件列表
-                renderFileList(filesWithSizes);
-                
-            } catch (error) {
-                console.error('加载文件列表失败:', error);
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('error').style.display = 'block';
-            }
+            
+            console.log('🎉 文件列表渲染完成，共', files.length, '个文件');
         }
         
         // 页面加载完成后执行
