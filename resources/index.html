@@ -29,7 +29,7 @@
         // 获取文件大小
         async function getFileSize(filename) {
             try {
-                const response = await fetch(`files/${filename}`, { method: 'HEAD' });
+                const response = await fetch(`resources/files/${filename}`, { method: 'HEAD' });
                 if (response.ok) {
                     const size = response.headers.get('content-length');
                     return size ? parseInt(size) : null;
@@ -54,7 +54,7 @@
                 const jsonPaths = [
                     'file-list.json',
                     './file-list.json',
-                    '/file-list.json'
+                    'resources/file-list.json'
                 ];
                 
                 let response = null;
