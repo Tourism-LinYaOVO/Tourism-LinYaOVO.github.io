@@ -9,10 +9,16 @@
     <p>这里只是存储我要存的东西，方便取用；你要用也行。</p>
     
     <div id="loading">正在加载文件列表...</div>
-    <div id="error" style="display:none; color:red; border:1px solid red; padding:10px;"></div>
-    <ul id="fileList"></ul>
+    <div id="error" style="display:none;">错误信息将显示在这里</div>
     
-    <div>共 <span id="fileCount">0</span> 个文件 | 最后更新: <span id="lastUpdated">-</span></div>
+    <div id="folderContainer"></div>
+    
+    <hr>
+    <div>
+        最后更新: <span id="lastUpdated">-</span><br>
+        文件夹: <span id="folderCount">0</span> 个 | 文件: <span id="fileCount">0</span> 个<br>
+        页面生成时间: <span id="pageGenerated">-</span>
+    </div>
     
     <script>
         // 格式化文件大小为人类可读格式
@@ -41,20 +47,206 @@
             }
         }
         
+        // 格式化时间显示
+        function formatDateTime(dateString) {
+            if (!dateString) return '未知时间';
+            
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) {
+                    return dateString;
+                }
+                
+                const year = date.getFullYear();
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                const hours = date.getHours().toString().padStart(2, '0');
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                const seconds = date.getSeconds().toString().padStart(2, '0');
+                
+                return `${year}年${month}月${day}日 ${hours}:${minutes}:${seconds}`;
+            } catch (e) {
+                return dateString;
+            }
+        }
+        
+        // 计算相对时间
+        function getRelativeTime(dateString) {
+            if (!dateString) return '';
+            
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return '';
+                
+                const now = new Date();
+                const diffMs = now - date;
+                const diffSec = Math.floor(diffMs / 1000);
+                const diffMin = Math.floor(diffSec / 60);
+                const diffHour = Math.floor(diffMin / 60);
+                const diffDay = Math.floor(diffHour / 24);
+                
+                if (diffDay > 0) {
+                    return `${diffDay}天前`;
+                } else if (diffHour > 0) {
+                    return `${diffHour}小时前`;
+                } else if (diffMin > 0) {
+                    return `${diffMin}分钟前`;
+                } else {
+                    return '刚刚';
+                }
+            } catch (e) {
+                return '';
+            }
+        }
+        
+        // 渲染文件夹
+        function renderFolder(folder, folderIndex) {
+            const folderDiv = document.createElement('div');
+            
+            // 文件夹头部
+            const headerDiv = document.createElement('div');
+            
+            const nameH3 = document.createElement('h3');
+            nameH3.textContent = `${folderIndex + 1}. ${folder.name}`;
+            
+            const descP = document.createElement('p');
+            descP.textContent = folder.description || '无描述';
+            
+            headerDiv.appendChild(nameH3);
+            headerDiv.appendChild(descP);
+            
+            // 文件列表
+            const fileList = document.createElement('ul');
+            
+            // 遍历文件
+            folder.files.forEach((file, fileIndex) => {
+                const li = document.createElement('li');
+                
+                // 文件链接
+                const link = document.createElement('a');
+                link.href = `resources/files/${encodeURIComponent(file.name)}`;
+                link.textContent = `${folderIndex + 1}.${fileIndex + 1} ${file.name}`;
+                link.target = '_blank';
+                
+                li.appendChild(link);
+                
+                // 文件描述
+                if (file.description) {
+                    const descSpan = document.createElement('span');
+                    descSpan.textContent = ` - ${file.description}`;
+                    li.appendChild(descSpan);
+                }
+                
+                // 最后修改时间
+                if (file.lastModified) {
+                    const timeSpan = document.createElement('span');
+                    timeSpan.title = formatDateTime(file.lastModified);
+                    timeSpan.textContent = ` [更新: ${getRelativeTime(file.lastModified)}]`;
+                    li.appendChild(timeSpan);
+                }
+                
+                fileList.appendChild(li);
+            });
+            
+            folderDiv.appendChild(headerDiv);
+            folderDiv.appendChild(fileList);
+            
+            return folderDiv;
+        }
+        
+        // 处理新格式（有文件夹）
+        function handleNewFormat(config, container, folderCountEl, fileCountEl, lastUpdatedEl) {
+            folderCountEl.textContent = config.folders.length;
+            
+            let totalFiles = 0;
+            config.folders.forEach(folder => {
+                if (folder.files && Array.isArray(folder.files)) {
+                    totalFiles += folder.files.length;
+                }
+            });
+            fileCountEl.textContent = totalFiles;
+            
+            if (config.lastUpdated) {
+                lastUpdatedEl.textContent = formatDateTime(config.lastUpdated);
+            } else {
+                lastUpdatedEl.textContent = formatDateTime(new Date().toISOString());
+            }
+            
+            config.folders.forEach((folder, index) => {
+                if (folder.files && Array.isArray(folder.files)) {
+                    const folderDiv = renderFolder(folder, index);
+                    container.appendChild(folderDiv);
+                    
+                    // 异步获取文件大小
+                    folder.files.forEach(async (file) => {
+                        const size = await getFileSize(file.name);
+                        if (size) {
+                            const fileItems = folderDiv.querySelectorAll('li');
+                            const fileIndex = folder.files.indexOf(file);
+                            if (fileItems[fileIndex]) {
+                                const sizeSpan = document.createElement('span');
+                                sizeSpan.textContent = ` (${formatFileSize(size)})`;
+                                fileItems[fileIndex].appendChild(sizeSpan);
+                            }
+                        }
+                    });
+                }
+            });
+        }
+        
+        // 处理旧格式（只有文件列表）
+        function handleOldFormat(config, container, folderCountEl, fileCountEl, lastUpdatedEl) {
+            // 将旧格式转换为新格式
+            const convertedFolder = {
+                name: "所有文件",
+                description: "未分类的文件",
+                files: config.files
+            };
+            
+            folderCountEl.textContent = 1;
+            fileCountEl.textContent = config.files.length;
+            
+            if (config.lastUpdated) {
+                lastUpdatedEl.textContent = formatDateTime(config.lastUpdated);
+            } else {
+                lastUpdatedEl.textContent = formatDateTime(new Date().toISOString());
+            }
+            
+            const folderDiv = renderFolder(convertedFolder, 0);
+            container.appendChild(folderDiv);
+            
+            // 异步获取文件大小
+            config.files.forEach(async (file) => {
+                const size = await getFileSize(file.name);
+                if (size) {
+                    const fileItems = folderDiv.querySelectorAll('li');
+                    const fileIndex = config.files.indexOf(file);
+                    if (fileItems[fileIndex]) {
+                        const sizeSpan = document.createElement('span');
+                        sizeSpan.textContent = ` (${formatFileSize(size)})`;
+                        fileItems[fileIndex].appendChild(sizeSpan);
+                    }
+                }
+            });
+        }
+        
         // 主函数
         async function loadFileList() {
             const loadingEl = document.getElementById('loading');
             const errorEl = document.getElementById('error');
-            const fileListEl = document.getElementById('fileList');
+            const folderContainer = document.getElementById('folderContainer');
+            const folderCountEl = document.getElementById('folderCount');
             const fileCountEl = document.getElementById('fileCount');
             const lastUpdatedEl = document.getElementById('lastUpdated');
+            const pageGeneratedEl = document.getElementById('pageGenerated');
             
             try {
                 // 1. 尝试不同的JSON文件路径
                 const jsonPaths = [
+                    'resources/file-list.json',
+                    './resources/file-list.json',
                     'file-list.json',
-                    './file-list.json',
-                    'resources/file-list.json'
+                    './file-list.json'
                 ];
                 
                 let response = null;
@@ -63,10 +255,11 @@
                     try {
                         response = await fetch(path);
                         if (response.ok) {
+                            console.log('JSON加载成功:', path);
                             break;
                         }
                     } catch (e) {
-                        // 继续尝试下一个路径
+                        console.log('路径失败:', path);
                     }
                 }
                 
@@ -76,61 +269,35 @@
                 
                 const config = await response.json();
                 
-                if (!config.files || !Array.isArray(config.files)) {
-                    throw new Error('JSON格式错误: 缺少files数组');
-                }
-                
                 // 2. 清空加载提示
                 loadingEl.style.display = 'none';
                 
-                // 3. 更新文件计数
-                fileCountEl.textContent = config.files.length;
-                lastUpdatedEl.textContent = new Date().toLocaleDateString('zh-CN');
+                // 3. 更新页面生成时间
+                const pageTime = new Date().toISOString();
+                pageGeneratedEl.textContent = formatDateTime(pageTime);
                 
-                // 4. 显示文件列表，包含文件大小
-                for (const file of config.files) {
-                    const listItem = document.createElement('li');
-                    
-                    // 获取文件大小
-                    const fileSize = await getFileSize(file.name);
-                    const sizeText = fileSize ? ` (${formatFileSize(fileSize)})` : '';
-                    
-                    // 创建文件链接
-                    const link = document.createElement('a');
-                    link.href = `resources/files/${encodeURIComponent(file.name)}`;
-                    link.textContent = file.name;
-                    
-                    // 将链接和大小添加到列表项
-                    listItem.appendChild(link);
-                    
-                    // 如果有描述，添加描述
-                    if (file.description) {
-                        const desc = document.createElement('span');
-                        desc.textContent = ` - ${file.description}`;
-                        desc.style.color = '#666';
-                        listItem.appendChild(desc);
-                    }
-                    
-                    // 添加文件大小
-                    const sizeSpan = document.createElement('span');
-                    sizeSpan.textContent = sizeText;
-                    sizeSpan.style.color = '#888';
-                    sizeSpan.style.fontSize = '0.9em';
-                    sizeSpan.style.marginLeft = '8px';
-                    listItem.appendChild(sizeSpan);
-                    
-                    fileListEl.appendChild(listItem);
+                // 4. 处理新旧格式兼容
+                if (config.folders && Array.isArray(config.folders)) {
+                    handleNewFormat(config, folderContainer, folderCountEl, fileCountEl, lastUpdatedEl);
+                } else if (config.files && Array.isArray(config.files)) {
+                    handleOldFormat(config, folderContainer, folderCountEl, fileCountEl, lastUpdatedEl);
+                } else {
+                    throw new Error('JSON格式错误: 缺少folders或files数组');
                 }
                 
             } catch (error) {
                 loadingEl.style.display = 'none';
                 errorEl.style.display = 'block';
                 errorEl.innerHTML = `
-                    错误: ${error.message}<br><br>
-                    请检查：
-                    1. file-list.json 文件是否存在
-                    2. JSON 格式是否正确
-                    3. 文件名是否完全匹配
+                    <h3>加载失败</h3>
+                    <p><strong>错误:</strong> ${error.message}</p>
+                    <p>请检查：</p>
+                    <ol>
+                        <li>file-list.json 文件是否存在</li>
+                        <li>JSON 格式是否正确</li>
+                        <li>网络连接是否正常</li>
+                    </ol>
+                    <p>当前时间: ${formatDateTime(new Date().toISOString())}</p>
                 `;
                 console.error('加载失败:', error);
             }
