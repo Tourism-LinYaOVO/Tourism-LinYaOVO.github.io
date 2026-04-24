@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TourTi的点击器</title>
+    <script>
+        // 页面加载时从本地存储读取计数
+        window.onload = function() {
+            const savedCount = localStorage.getItem('clicker');
+            if (savedCount !== null) {
+                document.getElementById('count').textContent = savedCount;
+            }
+        };
+
+        // 增加计数的函数
+        function increment() {
+            const countElement = document.getElementById('count');
+            let currentCount = parseInt(countElement.textContent);
+            currentCount++;
+            countElement.textContent = currentCount;
+            
+            // 保存到本地存储
+            localStorage.setItem('clicker', currentCount.toString());
+        }
+
+        // 监听键盘事件
+        document.addEventListener('keydown', function(event) {
+            // 只响应空格键（keyCode 32）
+            if (event.code === 'Space' || event.keyCode === 32) {
+                event.preventDefault(); // 防止空格键滚动页面
+                increment();
+            }
+        });
+    </script>
+</head>
+<body>
+    <p><span id="count">0</span></p>
+    <button onclick="increment()">点击</button>
+</body>
+</html>
+
