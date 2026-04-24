@@ -1,10 +1,14 @@
 {
-  "files": [
+  "folders": [
     {
-      "name": "Phigros官方资源包.zip",
-      "description": "Phigros Official Skin"
-      "lastModified":"2026-04-24 07:36:00"
-    }
-  ]
+      "name": "Tourism的东西",
+      "description": "千万不要碰",
+      "files": 
+      {
+         "name": "Phigros官方资源包.zip",
+         "description": "Phigros Official Skin"
+         "lastModified":"2026-04-24 07:36:00"
+      }
+   ]
 }
 
