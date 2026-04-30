@@ -1,4 +1,4 @@
-/* navbar.css - 顶栏样式 */
+/* navbar.css - 修复移动端样式问题 */
 /* 基础重置 */
 .navbar * {
     margin: 0;
@@ -32,6 +32,7 @@
     display: flex;
     align-items: center;
     text-decoration: none;
+    z-index: 1001; /* 确保在移动端菜单之上 */
 }
 
 .navbar .logo-icon {
@@ -61,7 +62,7 @@
     margin-left: 10px;
 }
 
-/* 导航菜单 */
+/* 导航菜单 - 桌面端样式 */
 .navbar .nav-menu {
     display: flex;
     list-style: none;
@@ -88,7 +89,7 @@
     color: #3498db;
 }
 
-/* 下拉菜单样式 */
+/* 下拉菜单样式 - 桌面端 */
 .navbar .dropdown-content {
     position: absolute;
     top: 100%;
@@ -139,18 +140,19 @@
     padding: 8px;
     border-radius: 4px;
     transition: background-color 0.3s;
+    z-index: 1001; /* 确保在移动端菜单之上 */
 }
 
 .navbar .mobile-menu-btn:hover {
     background-color: #f5f5f5;
 }
 
-/* 响应式设计 */
+/* 响应式设计 - 移动端 */
 @media (max-width: 768px) {
     .navbar .mobile-menu-btn {
         display: block;
     }
-    
+    
     .navbar .nav-menu {
         position: fixed;
         top: 80px;
@@ -160,13 +162,15 @@
         flex-direction: column;
         padding: 20px;
         box-shadow: 0 5px 10px rgba(0,0,0,0.1);
-        display: none;
+        display: none; /* 默认隐藏 */
+        z-index: 999;
     }
-    
+    
     .navbar .nav-menu.active {
-        display: flex;
+        display: flex; /* 激活时显示 */
     }
-    
+    
+    /* 移动端下拉菜单 */
     .navbar .dropdown-content {
         position: static;
         opacity: 1;
@@ -174,23 +178,38 @@
         transform: none;
         box-shadow: none;
         background-color: #f9f9f9;
-        margin-top: 10px;
-        display: none;
+        margin: 10px 0 0 20px;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
     }
-    
+    
     .navbar .dropdown.active .dropdown-content {
-        display: block;
+        max-height: 500px; /* 足够大的值以显示所有内容 */
     }
-    
+    
     /* 为下拉菜单添加箭头指示 */
+    .navbar .dropdown > .nav-link {
+        position: relative;
+        padding-right: 30px;
+    }
+    
     .navbar .dropdown > .nav-link::after {
         content: "▼";
-        font-size: 10px;
-        margin-left: 5px;
+        font-size: 12px;
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        transition: transform 0.3s;
     }
-    
+    
     .navbar .dropdown.active > .nav-link::after {
-        content: "▲";
+        transform: translateY(-50%) rotate(180deg);
+    }
+    
+    /* 移动端调整Logo和按钮的间距 */
+    .navbar-container {
+        padding: 0 15px;
     }
 }
-
