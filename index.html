@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TourTi·你会想要的好项目</title>
+    <title>我的网站</title>
+    
+    <!-- GitHub Pages 优化 -->
+    <!-- 添加这些meta标签确保更好的兼容性 -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="我的静态网站">
+    
     <style>
         /* 基础重置 */
         * {
@@ -12,10 +18,12 @@
             box-sizing: border-box;
         }
         
+        /* 添加字体回退方案 */
         body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             padding-top: 80px;
             background-color: #f5f5f5;
+            line-height: 1.6;
         }
         
         /* 顶栏容器 */
@@ -82,6 +90,7 @@
             text-decoration: none;
             color: #333;
             font-weight: 500;
+            transition: color 0.3s;
         }
         
         .nav-link:hover {
@@ -119,6 +128,7 @@
             text-decoration: none;
             color: #333;
             border-bottom: 1px solid #eee;
+            transition: background-color 0.3s, color 0.3s;
         }
         
         .dropdown-content a:hover {
@@ -138,6 +148,13 @@
             font-size: 24px;
             cursor: pointer;
             color: #333;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .mobile-menu-btn:hover {
+            background-color: #f5f5f5;
         }
         
         /* 响应式设计 */
@@ -177,7 +194,7 @@
                 display: block;
             }
             
-            /* 修复：为下拉菜单添加箭头指示 */
+            /* 为下拉菜单添加箭头指示 */
             .dropdown > .nav-link::after {
                 content: "▼";
                 font-size: 10px;
@@ -188,6 +205,31 @@
                 content: "▲";
             }
         }
+        
+        /* 页面内容样式 */
+        .content {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1, h2, h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            color: #555;
+        }
+        
+        .test-section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
     </style>
 </head>
 <body>
@@ -195,7 +237,7 @@
     <nav class="navbar">
         <div class="navbar-container">
             <!-- Logo -->
-            <a href="#" class="logo">
+            <a href="/" class="logo">
                 <div class="logo-icon">T</div>
                 <div class="logo-text">TourTi</div>
             </a>
@@ -255,15 +297,16 @@
             <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
         </div>
     </nav>
-
-       <h1>正在调整样式中…</h1>
+    
+        <h1>正在调整中…</h1>
     
     <script>
         // 移动端菜单切换
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const navMenu = document.getElementById('navMenu');
         
-        mobileMenuBtn.addEventListener('click', function() {
+        mobileMenuBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
             navMenu.classList.toggle('active');
         });
         
@@ -277,7 +320,7 @@
                 // 只在移动端处理
                 if (window.innerWidth <= 768) {
                     e.preventDefault();
-                    e.stopPropagation(); // 阻止事件冒泡
+                    e.stopPropagation();
                     
                     // 切换当前下拉菜单的active状态
                     dropdown.classList.toggle('active');
@@ -311,13 +354,16 @@
                 allNavLinks.forEach(navLink => {
                     navLink.classList.remove('active');
                 });
+                
+                // 这里可以添加页面跳转逻辑
+                // window.location.href = this.getAttribute('href');
             });
         });
         
         // 点击普通导航链接
         const navLinks = document.querySelectorAll('.nav-item:not(.dropdown) .nav-link');
         navLinks.forEach(link => {
-            link.addEventListener('click', function() {
+            link.addEventListener('click', function(e) {
                 // 移除所有nav-link的active类
                 const allNavLinks = document.querySelectorAll('.nav-link');
                 allNavLinks.forEach(navLink => {
@@ -336,6 +382,9 @@
                         dropdown.classList.remove('active');
                     });
                 }
+                
+                // 这里可以添加页面跳转逻辑
+                // window.location.href = this.getAttribute('href');
             });
         });
         
@@ -353,6 +402,11 @@
                     });
                 }
             }
+        });
+        
+        // 页面加载完成后初始化
+        window.addEventListener('load', function() {
+            console.log('GitHub Pages优化顶栏已加载完成');
         });
     </script>
 </body>
