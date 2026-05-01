@@ -11,14 +11,13 @@
     {
       "label": "项目",
       "children": [
-        { "label": "Web 应用", "link": "#" },
         {
-          "label": "直接用",
+          "label": "直接用"
           "children": [
             {"label": "无", "link":"#"}
           ]
         },
-        { "label": "小工具", "link": "#" 
+        { "label": "小工具"
           "children":[
             {"label":"无", "link":"#"}
           ]
@@ -28,7 +27,7 @@
     {
       "label": "友情链接",
       "children": [
-        { "label": "shenyouchu.cn", "link": "https://shenyouchu.cn" },
+        { "label": "shenyouchu.cn", "link": "https://shenyouchu.cn"}
       ]
     }
   ]
