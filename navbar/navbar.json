@@ -9,30 +9,27 @@
       "link": "/"
     },
     {
-      "label": "产品",
+      "label": "项目",
       "children": [
         { "label": "Web 应用", "link": "#" },
         {
-          "label": "移动端",
+          "label": "直接用",
           "children": [
-            { "label": "iOS", "link": "#" },
-            { "label": "Android", "link": "#" },
-            { "label": "鸿蒙", "link": "#" }
+            {"label": "无", "link":"#"}
           ]
         },
-        { "label": "云服务", "link": "#" }
+        { "label": "小工具", "link": "#" 
+          "children":[
+            {"label":"无", "link":"#"}
+          ]
+        }
       ]
     },
     {
-      "label": "解决方案",
+      "label": "友情链接",
       "children": [
-        { "label": "企业版", "link": "#" },
-        { "label": "个人版", "link": "#" }
+        { "label": "shenyouchu.cn", "link": "https://shenyouchu.cn" },
       ]
-    },
-    {
-      "label": "关于我们",
-      "link": "#"
     }
   ]
 }
