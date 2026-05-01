@@ -1,10 +1,6 @@
 fetch("/navbar/navbar.json")
-  .then(res => {
-    if (!res.ok) throw new Error("navbar.json not found");
-    return res.json();
-  })
-  .then(renderNavbar)
-  .catch(err => console.error(err));
+  .then(res => res.json())
+  .then(renderNavbar);
 
 function renderNavbar(data) {
   document.getElementById("logo-img").src = data.logo.src;
@@ -18,9 +14,20 @@ function renderNavbar(data) {
   initBehavior();
 }
 
-/* 递归生成菜单 */
 function createMenuItem(item) {
-  const el = document.createElement("div");
+  let el;
+
+  // ✅ 有 link 且无 children → a 标签
+  if (item.link && !item.children) {
+    el = document.createElement("a");
+    el.href = item.link;
+    el.className = "menu-item";
+    el.textContent = item.label;
+    return el;
+  }
+
+  // ✅ 有 children → div
+  el = document.createElement("div");
   el.className = "menu-item";
   el.textContent = item.label;
 
@@ -43,7 +50,6 @@ function createMenuItem(item) {
   return el;
 }
 
-/* 行为逻辑（和你本地完全一致） */
 function initBehavior() {
   const hamburger = document.getElementById("hamburger");
   const menu = document.getElementById("menu");
@@ -56,6 +62,8 @@ function initBehavior() {
   document.querySelectorAll(".menu-item").forEach(item => {
     item.addEventListener("click", function (e) {
       if (window.innerWidth > 768) return;
+      if (this.tagName === "A") return;
+
       e.stopPropagation();
 
       const dropdown = this.querySelector(":scope > .dropdown");
@@ -84,4 +92,3 @@ function initBehavior() {
     }
   });
 }
-
