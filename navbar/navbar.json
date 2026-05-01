@@ -12,12 +12,12 @@
       "label": "项目",
       "children": [
         {
-          "label": "直接用"
+          "label": "直接用",
           "children": [
             {"label": "无", "link":"#"}
           ]
         },
-        { "label": "小工具"
+        { "label": "小工具",
           "children":[
             {"label":"无", "link":"#"}
           ]
