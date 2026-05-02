@@ -12,7 +12,7 @@
       "label": "项目",
       "children": [
         {
-          "label": "直接用",
+          "label": "[hot]大家都爱用的",
           "children": [
             {"label": "无", "link":"#"}
           ]
@@ -21,6 +21,12 @@
           "children":[
             {"label":"无", "link":"#"}
           ]
+        },
+        {
+          "label":"小游戏",
+          "chilren":[
+            {"label":"无", "link":"#"}
+:          ]
         }
       ]
     },
