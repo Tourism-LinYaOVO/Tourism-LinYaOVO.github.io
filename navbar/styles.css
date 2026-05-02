@@ -181,7 +181,7 @@ body {
   .dropdown .dropdown {
     background: #ffffff;     /* ✅ 纯白 */
     box-shadow: none !important; /* ✅ 去掉悬浮感 */
-    border-left: 1px solid #eee; /* ✅ 轻微分割线 */
+    border-left: 1px solid #ffffff; /* ✅ 轻微分割线 */
     padding-left: 12px;
     margin-top: 4px;
     border-radius: 0;        /* ✅ 不要圆角 */
