@@ -173,30 +173,29 @@ body {
   }
 }
 /* ==========================================
-   移动端：三级菜单“去PC化”
+   移动端：三级菜单“去 PC 化”
    ========================================== */
 @media (max-width: 768px) {
 
-  /* 三级菜单容器 */
+  /* 三级菜单：纯白背景 */
   .dropdown .dropdown {
-    background: #f7f8fa;      /* ✅ 浅灰背景，和页面区分 */
-    border-left: 3px solid #4f46e5; /* ✅ 强调色左边框 */
+    background: #ffffff;     /* ✅ 纯白 */
+    box-shadow: none !important; /* ✅ 去掉悬浮感 */
+    border-left: 1px solid #eee; /* ✅ 轻微分割线 */
+    padding-left: 12px;
     margin-top: 4px;
-    padding-left: 8px;
-    box-shadow: none !important; /* ✅ 去掉电脑感 */
-    border-radius: 0 6px 6px 0;
+    border-radius: 0;        /* ✅ 不要圆角 */
   }
 
   /* 三级菜单项 */
   .dropdown .dropdown .menu-item {
-    padding: 8px 12px;
+    padding: 10px 12px;
     font-size: 13px;
     color: #555;
   }
 
-  /* 去掉三级菜单的箭头（手机不需要） */
+  /* 去掉三级菜单的箭头 */
   .dropdown .dropdown .arrow {
     display: none;
   }
 }
-
