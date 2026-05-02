@@ -21,33 +21,17 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   z-index: 1000;
 }
 
 /* ===== Logo ===== */
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.logo img {
-  height: 32px;
-}
-
-.logo span {
-  font-weight: 600;
-  color: #222;
-  font-size: 16px;
-}
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo img { height: 32px; }
+.logo span { font-weight: 600; color: #222; font-size: 16px; }
 
 /* ===== 菜单容器 ===== */
-.menu {
-  display: flex;
-  gap: 24px;
-  list-style: none;
-}
+.menu { display: flex; gap: 24px; list-style: none; }
 
 /* ===== 菜单项 ===== */
 .menu-item {
@@ -56,7 +40,6 @@ body {
   padding: 8px 0;
   font-size: 14px;
   color: #333;
-  white-space: nowrap;
 }
 
 /* ===== 箭头 ===== */
@@ -68,61 +51,48 @@ body {
 }
 
 /* ==========================================
-   桌面端（≥769px）：纯 CSS Hover
+   桌面端（≥769px）：强制悬浮样式
    ========================================== */
 @media (min-width: 769px) {
-  .menu-item:hover {
-    color: #4f46e5;
-  }
-
-  .menu-item:hover > .dropdown {
-    display: block !important;
-  }
-
-  .menu-item:hover > .arrow {
-    transform: rotate(180deg);
-  }
+  .menu-item:hover { color: #4f46e5; }
+  .menu-item:hover > .dropdown { display: block !important; }
+  .menu-item:hover > .arrow { transform: rotate(180deg); }
 }
 
-/* ===== 下拉菜单 ===== */
+/* ==========================================
+   下拉菜单（默认 = 桌面端样式）
+   ========================================== */
 .dropdown {
   position: absolute;
   top: 38px;
   left: 0;
   min-width: 180px;
   background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
   border-radius: 6px;
   display: none;
   z-index: 1001;
 }
 
-.dropdown .menu-item {
-  padding: 10px 16px;
-  display: block;
-}
+.dropdown .menu-item { padding: 10px 16px; }
+.dropdown .menu-item:hover { background: #f5f5f5; }
 
-.dropdown .menu-item:hover {
-  background: #f5f5f5;
-}
-
-/* ===== 三级菜单 ===== */
+/* 三级菜单（桌面端） */
 .dropdown .dropdown {
   top: 0;
   left: 100%;
 }
 
 /* ==========================================
-   汉堡按钮（关键：移动端显示）
+   汉堡按钮
    ========================================== */
 .hamburger {
-  display: none; /* 默认隐藏 */
+  display: none;
   flex-direction: column;
   gap: 5px;
   cursor: pointer;
   padding: 8px;
 }
-
 .hamburger span {
   width: 22px;
   height: 2px;
@@ -131,15 +101,14 @@ body {
 }
 
 /* ==========================================
-   移动端（≤768px）
+   移动端（≤768px）：强制扁平样式
    ========================================== */
 @media (max-width: 768px) {
-  /* ✅ 显示汉堡菜单 */
-  .hamburger {
-    display: flex;
-  }
 
-  /* 移动端菜单布局 */
+  /* 显示汉堡 */
+  .hamburger { display: flex; }
+
+  /* 侧边栏 */
   .menu {
     position: fixed;
     top: 60px;
@@ -149,48 +118,45 @@ body {
     background: #fff;
     flex-direction: column;
     padding: 20px;
-    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: -2px 0 10px rgba(0,0,0,0.1);
     transform: translateX(100%);
     transition: transform 0.3s ease;
     overflow-y: auto;
   }
 
-  .menu.open {
-    transform: translateX(0);
-  }
+  .menu.open { transform: translateX(0); }
 
-  /* 移动端：取消悬浮定位 */
+  /* ✅ 核心：强制取消悬浮属性 */
   .dropdown {
     position: static !important;
     box-shadow: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
     padding-left: 12px;
-    margin-top: 4px;
     display: none;
   }
 
-  /* 移动端：激活状态 */
-  .menu-item.active > .dropdown {
-    display: block;
-  }
+  /* 激活状态 */
+  .menu-item.active > .dropdown { display: block; }
+  .menu-item.active > .arrow { transform: rotate(180deg); }
 
-  .menu-item.active > .arrow {
-    transform: rotate(180deg);
-  }
-
-  /* 三级菜单：纯白扁平 */
+  /* ✅✅✅ 三级菜单：彻底去 PC 化 */
   .dropdown .dropdown {
-    background: #ffffff;
-    border-left: 1px solid #eee;
-    padding-left: 12px;
+    background: #ffffff !important;
+    border-left: 1px solid #eee !important;
+    margin-top: 4px !important;
+    padding-left: 8px !important;
+    box-shadow: none !important;
+    position: static !important;
   }
 
   .dropdown .dropdown .menu-item {
-    padding: 10px 12px;
+    padding: 10px 12px !important;
     font-size: 13px;
     color: #555;
   }
 
   .dropdown .dropdown .arrow {
-    display: none;
-  } 
- }
+    display: none !important;
+  }
+}
