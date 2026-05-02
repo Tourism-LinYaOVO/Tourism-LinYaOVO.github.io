@@ -29,7 +29,9 @@
       "children": [
         { "label": "shenyouchu.cn", "link": "https://shenyouchu.cn"}
       ]
-    }
+    },
+    {
+      "label":"GitHub页面源代码", "link":"https://github.com/Tourism_LinYaOVO/Tourism_LinYaOVO.github.io"}
   ]
 }
 
