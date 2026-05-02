@@ -51,7 +51,7 @@ body {
 
 /* ===== 菜单项 ===== */
 .menu-item {
-  position: relative;
+  position: relative; /* 关键：给桌面端下拉定位 */
   cursor: pointer;
   padding: 8px 0;
   font-size: 14px;
@@ -71,23 +71,9 @@ body {
   font-size: 12px;
 }
 
-/* ✅ 桌面端：hover 时箭头旋转 */
-@media (min-width: 769px) {
-  .menu-item:hover > .arrow {
-    transform: rotate(180deg);
-  }
-}
-
-/* ✅ 移动端：active 类控制箭头 */
-@media (max-width: 768px) {
-  .menu-item.active > .arrow {
-    transform: rotate(180deg);
-  }
-}
-
 /* ===== 下拉菜单 ===== */
 .dropdown {
-  position: absolute;
+  position: absolute; /* 桌面端：绝对定位 */
   top: 38px;
   left: 0;
   min-width: 180px;
@@ -98,10 +84,13 @@ body {
   z-index: 1001;
 }
 
-/* ✅ 桌面端：纯 CSS hover 展开 */
+/* ✅ 桌面端：纯 CSS hover */
 @media (min-width: 769px) {
   .menu-item:hover > .dropdown {
     display: block;
+  }
+  .menu-item:hover > .arrow {
+    transform: rotate(180deg);
   }
 }
 
@@ -121,13 +110,6 @@ body {
   left: 100%;
 }
 
-/* ✅ 桌面端：三级菜单 hover 展开 */
-@media (min-width: 769px) {
-  .dropdown .menu-item:hover > .dropdown {
-    display: block;
-  }
-}
-
 /* ===== 汉堡按钮 ===== */
 .hamburger {
   display: none;
@@ -144,7 +126,9 @@ body {
   border-radius: 2px;
 }
 
-/* ===== 移动端样式 ===== */
+/* ==========================================
+   移动端专用样式（彻底隔离）
+   ========================================== */
 @media (max-width: 768px) {
   .hamburger {
     display: flex;
@@ -169,19 +153,22 @@ body {
     transform: translateX(0);
   }
 
+  /* ✅ 关键：移动端取消绝对定位，改为流式布局 */
   .dropdown {
-    position: static;
-    box-shadow: none;
+    position: static !important;
+    box-shadow: none !important;
     padding-left: 12px;
     margin-top: 4px;
+    display: none; /* 默认隐藏，由 JS 控制 */
   }
 
-  /* ✅ 移动端：JS 控制显示 */
-  .dropdown {
-    display: none;
+  /* 移动端箭头旋转（由 JS 控制 active 类） */
+  .menu-item.active > .arrow {
+    transform: rotate(180deg);
   }
 
-  .menu-item.active > .dropdown {
-    display: block;
+  /* 移动端禁用 hover 效果 */
+  .menu-item:hover > .dropdown {
+    display: none; /* 防止 hover 干扰 */
   }
 }
