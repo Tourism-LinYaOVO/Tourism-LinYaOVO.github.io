@@ -16,6 +16,7 @@ function renderNavbar(data) {
 }
 
 function createMenuItem(item) {
+  // 如果是链接且没有子项，生成 <a>
   if (item.link && !item.children) {
     const el = document.createElement("a");
     el.className = "menu-item";
@@ -24,6 +25,7 @@ function createMenuItem(item) {
     return el;
   }
 
+  // 否则生成 <div>（作为容器）
   const el = document.createElement("div");
   el.className = "menu-item";
   el.innerHTML = item.label;
@@ -51,18 +53,18 @@ function initBehavior() {
   const hamburger = document.getElementById("hamburger");
   const menu = document.getElementById("menu");
 
-  // ✅ 汉堡菜单
+  // 汉堡菜单
   hamburger.addEventListener("click", e => {
     e.stopPropagation();
     menu.classList.toggle("open");
   });
 
-  // ✅ 移动端：只绑定一次
+  // 移动端逻辑
   if (window.innerWidth <= 768) {
     setupMobileMenu();
   }
 
-  // ✅ 窗口大小改变时，重新判断
+  // 窗口大小改变时重新初始化
   window.addEventListener("resize", () => {
     if (window.innerWidth <= 768) {
       setupMobileMenu();
@@ -71,7 +73,7 @@ function initBehavior() {
     }
   });
 
-  // ✅ 点击页面其他地方关闭
+  // 点击页面其他地方关闭菜单
   document.addEventListener("click", e => {
     if (window.innerWidth <= 768 && !menu.contains(e.target)) {
       menu.classList.remove("open");
@@ -92,12 +94,15 @@ function setupMobileMenu() {
 }
 
 function handleMobileClick(e) {
+  // 如果是 <a> 标签，直接跳转，不做任何处理
+  if (this.tagName === 'A') return;
+
   e.stopPropagation();
-  
+
   const dropdown = this.querySelector(":scope > .dropdown");
   if (!dropdown) return;
 
-  // ✅ 关闭同级其他菜单
+  // 关闭同级的其他菜单
   const siblings = Array.from(this.parentElement.children);
   siblings.forEach(sibling => {
     if (sibling !== this) {
@@ -109,8 +114,9 @@ function handleMobileClick(e) {
     }
   });
 
-  // ✅ 切换当前菜单
+  // 切换当前菜单
   this.classList.toggle("active");
+  dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
 }
 
 function cleanupMobileMenu() {
@@ -125,5 +131,8 @@ function cleanupMobileMenu() {
 function closeAllDropdowns() {
   document.querySelectorAll(".menu-item").forEach(item => {
     item.classList.remove("active");
+    item.querySelectorAll(".dropdown").forEach(d => {
+      d.style.display = "none";
+    });
   });
 }
