@@ -24,7 +24,7 @@
         },
         {
           "label":"小游戏",
-          "chilren":[
+          "children":[
             {"label":"无", "link":"#"}
           ]
         }
