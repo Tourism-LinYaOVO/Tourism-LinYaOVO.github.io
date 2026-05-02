@@ -49,6 +49,7 @@ body {
   padding: 8px 0;
   font-size: 14px;
   color: #333;
+  text-decoration: none; /* 确保 a 标签没有下划线 */
 }
 
 .menu-item:hover {
@@ -80,6 +81,7 @@ body {
 
 .dropdown .menu-item {
   padding: 10px 16px;
+  display: block; /* 确保是块级元素 */
 }
 
 .dropdown .dropdown {
@@ -87,10 +89,15 @@ body {
   left: 100%;
 }
 
-/* Desktop hover */
+/* ✅ 桌面端 hover - 修复版 */
 @media (min-width: 769px) {
   .menu-item:hover > .dropdown {
-    display: block;
+    display: block !important; /* 强制显示 */
+  }
+  
+  /* 确保三级菜单也能 hover 显示 */
+  .dropdown .menu-item:hover > .dropdown {
+    display: block !important;
   }
 }
 
@@ -137,4 +144,3 @@ body {
     padding-left: 12px;
   }
 }
-
