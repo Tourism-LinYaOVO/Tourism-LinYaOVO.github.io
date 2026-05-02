@@ -172,3 +172,31 @@ body {
     display: none; /* 防止 hover 干扰 */
   }
 }
+/* ==========================================
+   移动端：三级菜单“去PC化”
+   ========================================== */
+@media (max-width: 768px) {
+
+  /* 三级菜单容器 */
+  .dropdown .dropdown {
+    background: #f7f8fa;      /* ✅ 浅灰背景，和页面区分 */
+    border-left: 3px solid #4f46e5; /* ✅ 强调色左边框 */
+    margin-top: 4px;
+    padding-left: 8px;
+    box-shadow: none !important; /* ✅ 去掉电脑感 */
+    border-radius: 0 6px 6px 0;
+  }
+
+  /* 三级菜单项 */
+  .dropdown .dropdown .menu-item {
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #555;
+  }
+
+  /* 去掉三级菜单的箭头（手机不需要） */
+  .dropdown .dropdown .arrow {
+    display: none;
+  }
+}
+
