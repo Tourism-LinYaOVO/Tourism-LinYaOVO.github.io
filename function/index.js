@@ -32,12 +32,12 @@ function handleRequest(request) {
 
   // 导航栏（暂时写死，避免 JSON 解析错误）
   if (action === 'navbar') {
-    var menu = 
+    var menu = 
       '====== TourTi Navbar ======\n\n' +
       '- <a href="/">1. 返回首页</a>\n' +
       '- <a href="/chat">2. 进入聊天室</a>\n\n' +
       '（把URL从 ? 开始的文字都替换成 ?get=navbaroff，关闭 navbar）';
-    
+    
     return new Response('<pre>' + menu + '</pre>', { headers: headers });
   }
 
