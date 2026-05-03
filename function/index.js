@@ -1,44 +1,28 @@
 // functions/index.js
 
-export async function onRequestGet({ request, env }) {
-  const url = new URL(request.url);
-  const action = url.searchParams.get('get');
+// 1. 定义一个普通函数来获取文本
+function getHomeText(origin) {
+  // 用 XMLHttpRequest 代替 fetch (iOS 更稳)
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', origin + '/static/home.txt', false); // false 表示同步
+  xhr.send();
+  return xhr.responseText;
+}
 
-  // 强制禁用缓存头
-  const headers = {
-    'Content-Type': 'text/html; charset=utf-8',
-    'Cache-Control': 'no-store, max-age=0'
-  };
+// 2. 定义处理函数
+function handleRequest(request) {
+  var url = new URL(request.url);
+  var action = url.searchParams.get('get');
+
+  // 强制不缓存头
+  var headers = new Headers();
+  headers.append('Content-Type', 'text/html; charset=utf-8');
+  headers.append('Cache-Control', 'no-cache, no-store, must-revalidate');
 
   // 默认：显示真首页
   if (!action) {
-    try {
-      // 使用完整的 URL 来 fetch，避免路径错误
-      const homeRes = await fetch(`${url.origin}/static/home.txt`);
-      const homeText = await homeRes.text();
-      return new Response(`<pre>${homeText}</pre>`, { headers });
-    } catch (e) {
-      return new Response(`Error loading home: ${e.message}`, { status: 500 });
-    }
-  }
-
-  // 执行导航
-  if (action === 'navbar') {
-    try {
-      const navRes = await fetch(`${url.origin}/static/navbar.json`);
-      const navData = await navRes.json();
-      
-      let output = '====== TourTi Navbar ======\n\n';
-      navData.forEach(item => {
-        output += `- <a href="${item.link}">${item.text}</a>\n`;
-      });
-      output += '\n--------------------------------';
-      output += '\n（把URL从 ? 开始的文字都替换成 ?get=navbaroff，关闭 navbar）';
-
-      return new Response(`<pre>${output}</pre>`, { headers });
-    } catch (e) {
-      return new Response(`Error loading navbar: ${e.message}`, { status: 500 });
-    }
+    var text = getHomeText(url.origin);
+    return new Response('<pre>' + text + '</pre>', { headers: headers });
   }
 
   // 关闭导航
@@ -46,5 +30,21 @@ export async function onRequestGet({ request, env }) {
     return Response.redirect('/', 302);
   }
 
-  return new Response('Error: Unknown command.', { status: 404, headers });
+  // 导航栏（暂时写死，避免 JSON 解析错误）
+  if (action === 'navbar') {
+    var menu = 
+      '====== TourTi Navbar ======\n\n' +
+      '- <a href="/">1. 返回首页</a>\n' +
+      '- <a href="/chat">2. 进入聊天室</a>\n\n' +
+      '（把URL从 ? 开始的文字都替换成 ?get=navbaroff，关闭 navbar）';
+    
+    return new Response('<pre>' + menu + '</pre>', { headers: headers });
+  }
+
+  return new Response('Error: Unknown command.', { status: 404, headers: headers });
 }
+
+// 3. 导出（Cloudflare 标准写法）
+addEventListener('fetch', function(event) {
+  event.respondWith(handleRequest(event.request));
+});
