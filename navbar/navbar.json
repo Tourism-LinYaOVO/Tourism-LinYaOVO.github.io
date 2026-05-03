@@ -19,7 +19,7 @@
         },
          {"label": "小工具",
           "children":[
-            {"label":"无", "link":"#"}
+            {"label":"编辑器", "link":"tools/editer.html"}
           ]
         },
         {
