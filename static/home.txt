@@ -3,5 +3,4 @@
 使用URL参数特性特制而成
     By Tourism
 （请在网址后面加上?get=navbar
-  来打开菜单栏，?get=navbaroff
-  来关闭菜单栏。）
+  来打开菜单栏。）
