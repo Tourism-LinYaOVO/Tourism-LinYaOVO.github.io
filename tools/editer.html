@@ -1,0 +1,2455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TourTi Editor</title>
+    <style>
+        body { margin:0; height: 100vh; overflow: hidden; background: #1e1e1e; color: #d4d4d4; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        .container { 
+            display: flex; 
+            height: 100%; 
+            position: relative;
+        }
+
+        .sidebar { width: 280px; background: #252526; border-right: 1px solid #333; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 12px 15px; font-weight: bold; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header button { background: #0e639c; border: none; color: white; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-size: 18px; }
+        .file-list { flex:1; overflow-y: auto; padding: 10px; }
+        
+        .file-item { display: flex; align-items: center; padding: 8px; border-radius: 4px; margin-bottom: 5px; background: #2d2d30; }<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TourTi Editor</title>
+    <style>
+        body { margin:0; height: 100vh; overflow: hidden; background: #1e1e1e; color: #d4d4d4; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        .container { 
+            display: flex; 
+            height: 100%; 
+            position: relative;
+        }
+
+        .sidebar { width: 280px; background: #252526; border-right: 1px solid #333; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 12px 15px; font-weight: bold; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header button { background: #0e639c; border: none; color: white; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-size: 18px; }
+        .file-list { flex:1; overflow-y: auto; padding: 10px; }
+        
+        .file-item { display: flex; align-items: center; padding: 8px; border-radius: 4px; margin-bottom: 5px; background: #2d2d30; }
+        .file-item.active { background: #094771; }
+        .file-name { flex: 1; cursor: pointer; padding: 2px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-actions { display: flex; gap: 5px; }
+        .file-actions button { background: #3a3a3a; border: none; color: #ccc; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px; }
+        .file-actions button:hover { background: #555; }
+        .file-actions .save-btn { color: #4ec9b0; }
+        .empty-tip { color: #888; padding: 20px; text-align: center; font-size: 13px; }
+        
+        .sidebar-footer { border-top: 1px solid #333; padding: 10px; display: flex; justify-content: center; }
+        .settings-btn { background: none; border: none; color: #888; cursor: pointer; font-size: 20px; width: 100%; text-align: center; }
+        .settings-btn:hover { color: #fff; }
+
+        .resizer { width: 15px; background: #333; cursor: col-resize; user-select: none; touch-action: none; position: relative; }
+        .resizer::after { content: ''; position: absolute; top:0; left: -10px; right: -10px; bottom: 0; }
+        .resizer:hover, .resizer:active { background: #0e639c; }
+
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        #editor-container { flex: 1; }
+
+        #overlay { 
+            position: absolute; 
+            top: 0; 
+            right: 0; 
+            bottom: 0; 
+            background: rgba(30,30,30,0.95); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 22px; 
+            color: #888; 
+            z-index: 10;
+        }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: #252526; padding: 25px; border-radius: 8px; width: 350px; max-height: 80vh; display: flex; flex-direction: column; }
+        .modal-content h3 { margin-top: 0; color: white; margin-bottom: 20px; }
+        
+        .settings-content { 
+            flex: 1; 
+            overflow-y: auto; 
+            max-height: calc(80vh - 120px);
+            padding-right: 5px;
+        }
+        .settings-content::-webkit-scrollbar { width: 6px; }
+        .settings-content::-webkit-scrollbar-track { background: #2d2d30; }
+        .settings-content::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        
+        .setting-group { margin-bottom: 20px; }
+        .setting-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+        .setting-label { 
+            flex: 1; 
+            margin-right: 20px; 
+            font-size: 14px;
+        }
+        .setting-control { 
+            flex-shrink: 0; 
+            width: 120px; 
+            text-align: right;
+        }
+        .setting-control select, 
+        .setting-control input[type="range"] { 
+            width: 100%; 
+            background: #3c3c3c; 
+            border: 1px solid #555; 
+            color: white; 
+            border-radius: 4px;
+            padding: 5px;
+        }
+        .setting-control input[type="checkbox"] { 
+            width: 18px; 
+            height: 18px; 
+            accent-color: #0e639c;
+        }
+        .slider-value { 
+            display: inline-block; 
+            margin-left: 10px; 
+            min-width: 40px; 
+            text-align: center;
+        }
+        
+        .modal-actions { text-align: right; margin-top: 20px; padding-top: 20px; border-top: 1px solid #333; }
+        .modal-actions button { margin-left: 10px; padding: 8px 16px; cursor: pointer; border-radius: 4px; border: none; }
+        .no-select { user-select: none; -webkit-user-select: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                Files
+                <button onclick="showCreateModal()">+</button>
+            </div>
+            <div class="file-list" id="fileList"></div>
+            <div class="sidebar-footer">
+                <button class="settings-btn" onclick="showSettingsModal()">⚙️</button>
+            </div>
+        </div>
+
+        <div class="resizer" id="resizer"></div>
+
+        <div class="main">
+            <div id="editor-container"></div>
+        </div>
+
+        <div id="overlay">请选择或创建一个文件</div>
+    </div>
+
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <h3>新建文件</h3>
+            <input type="text" id="fileNameInput" placeholder="例如: main.js 或 index.html" autofocus>
+            <div class="modal-actions">
+                <button onclick="closeModal('createModal')" style="background:#666;color:white;">取消</button>
+                <button onclick="createFile()" style="background:#0e639c;color:white;">创建</button>
+            </div>
+        </div>
+    </div><!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TourTi Editor</title>
+    <style>
+        body { margin:0; height: 100vh; overflow: hidden; background: #1e1e1e; color: #d4d4d4; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        .container { 
+            display: flex; 
+            height: 100%; 
+            position: relative;
+        }
+
+        .sidebar { width: 280px; background: #252526; border-right: 1px solid #333; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 12px 15px; font-weight: bold; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header button { background: #0e639c; border: none; color: white; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-size: 18px; }
+        .file-list { flex:1; overflow-y: auto; padding: 10px; }
+        
+        .file-item { display: flex; align-items: center; padding: 8px; border-radius: 4px; margin-bottom: 5px; background: #2d2d30; }
+        .file-item.active { background: #094771; }
+        .file-name { flex: 1; cursor: pointer; padding: 2px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-actions { display: flex; gap: 5px; }
+        .file-actions button { background: #3a3a3a; border: none; color: #ccc; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px; }
+        .file-actions button:hover { background: #555; }
+        .file-actions .save-btn { color: #4ec9b0; }
+        .empty-tip { color: #888; padding: 20px; text-align: center; font-size: 13px; }
+        
+        .sidebar-footer { border-top: 1px solid #333; padding: 10px; display: flex; justify-content: center; }
+        .settings-btn { background: none; border: none; color: #888; cursor: pointer; font-size: 20px; width: 100%; text-align: center; }
+        .settings-btn:hover { color: #fff; }
+
+        .resizer { width: 15px; background: #333; cursor: col-resize; user-select: none; touch-action: none; position: relative; }
+        .resizer::after { content: ''; position: absolute; top:0; left: -10px; right: -10px; bottom: 0; }
+        .resizer:hover, .resizer:active { background: #0e639c; }
+
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        #editor-container { flex: 1; }
+
+        #overlay { 
+            position: absolute; 
+            top: 0; 
+            right: 0; 
+            bottom: 0; 
+            background: rgba(30,30,30,0.95); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 22px; 
+            color: #888; 
+            z-index: 10;
+        }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: #252526; padding: 25px; border-radius: 8px; width: 350px; max-height: 80vh; display: flex; flex-direction: column; }
+        .modal-content h3 { margin-top: 0; color: white; margin-bottom: 20px; }
+        
+        .settings-content { 
+            flex: 1; 
+            overflow-y: auto; 
+            max-height: calc(80vh - 120px);
+            padding-right: 5px;
+        }
+        .settings-content::-webkit-scrollbar { width: 6px; }
+        .settings-content::-webkit-scrollbar-track { background: #2d2d30; }
+        .settings-content::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        
+        .setting-group { margin-bottom: 20px; }
+        .setting-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+        .setting-label { 
+            flex: 1; 
+            margin-right: 20px; 
+            font-size: 14px;
+        }
+        .setting-control { 
+            flex-shrink: 0; 
+            width: 120px; 
+            text-align: right;
+        }
+        .setting-control select, 
+        .setting-control input[type="range"] { 
+            width: 100%; 
+            background: #3c3c3c; 
+            border: 1px solid #555; 
+            color: white; 
+            border-radius: 4px;
+            padding: 5px;
+        }
+        .setting-control input[type="checkbox"] { 
+            width: 18px; 
+            height: 18px; 
+            accent-color: #0e639c;
+        }
+        .slider-value { 
+            display: inline-block; 
+            margin-left: 10px; 
+            min-width: 40px; 
+            text-align: center;
+        }
+        
+        .modal-actions { text-align: right; margin-top: 20px; padding-top: 20px; border-top: 1px solid #333; }
+        .modal-actions button { margin-left: 10px; padding: 8px 16px; cursor: pointer; border-radius: 4px; border: none; }
+        .no-select { user-select: none; -webkit-user-select: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                Files
+                <button onclick="showCreateModal()">+</button>
+            </div>
+            <div class="file-list" id="fileList"></div>
+            <div class="sidebar-footer">
+                <button class="settings-btn" onclick="showSettingsModal()">⚙️</button>
+            </div>
+        </div>
+
+        <div class="resizer" id="resizer"></div>
+
+        <div class="main">
+            <div id="editor-container"></div>
+        </div>
+
+        <div id="overlay">请选择或创建一个文件</div>
+    </div>
+
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <h3>新建文件</h3>
+            <input type="text" id="fileNameInput" placeholder="例如: main.js 或 index.html" autofocus>
+            <div class="modal-actions">
+                <button onclick="closeModal('createModal')" style="background:#666;color:white;">取消</button>
+                <button onclick="createFile()" style="background:#0e639c;color:white;">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <h3>编辑器设置</h3>
+            
+            <div class="settings-content">
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="fontSizeSlider">字体大小</label>
+                        <div class="setting-control">
+                            <input type="range" id="fontSizeSlider" min="10" max="24" step="1">
+                            <span class="slider-value" id="fontSizeValue">16px</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="wordWrapCheckbox">自动换行</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="wordWrapCheckbox">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="autoSaveCheckbox">自动保存</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="autoSaveCheckbox">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="autoCloseBrackets">自动补全括号</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="autoCloseBrackets">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="showLineNumbers">显示行号</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="showLineNumbers">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="highlightCurrentLine">高亮当前行</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="highlightCurrentLine">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button onclick="closeModal('settingsModal')" style="background:#666;color:white;">关闭</button>
+                <button onclick="applySettings()" style="background:#0e639c;color:white;">应用</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+    
+    <script>
+        let editor;
+        let files = JSON.parse(localStorage.getItem('tourtides_files')) || {};
+        let currentFile = null;
+        const overlay = document.getElementById('overlay');
+        const sidebar = document.getElementById('sidebar');
+        
+        // 加载设置
+        let settings = JSON.parse(localStorage.getItem('tourtides_settings')) || {
+            fontSize: 16,
+            wordWrap: false,
+            autoSave: true,
+            autoCloseBrackets: true,
+            showLineNumbers: true,
+            highlightCurrentLine: true
+        };<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TourTi Editor</title>
+    <style>
+        body { margin:0; height: 100vh; overflow: hidden; background: #1e1e1e; color: #d4d4d4; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        .container { 
+            display: flex; 
+            height: 100%; 
+            position: relative;
+        }
+
+        .sidebar { width: 280px; background: #252526; border-right: 1px solid #333; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 12px 15px; font-weight: bold; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header button { background: #0e639c; border: none; color: white; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-size: 18px; }
+        .file-list { flex:1; overflow-y: auto; padding: 10px; }
+        
+        .file-item { display: flex; align-items: center; padding: 8px; border-radius: 4px; margin-bottom: 5px; background: #2d2d30; }
+        .file-item.active { background: #094771; }
+        .file-name { flex: 1; cursor: pointer; padding: 2px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-actions { display: flex; gap: 5px; }
+        .file-actions button { background: #3a3a3a; border: none; color: #ccc; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px; }
+        .file-actions button:hover { background: #555; }
+        .file-actions .save-btn { color: #4ec9b0; }
+        .empty-tip { color: #888; padding: 20px; text-align: center; font-size: 13px; }
+        
+        .sidebar-footer { border-top: 1px solid #333; padding: 10px; display: flex; justify-content: center; }
+        .settings-btn { background: none; border: none; color: #888; cursor: pointer; font-size: 20px; width: 100%; text-align: center; }
+        .settings-btn:hover { color: #fff; }
+
+        .resizer { width: 15px; background: #333; cursor: col-resize; user-select: none; touch-action: none; position: relative; }
+        .resizer::after { content: ''; position: absolute; top:0; left: -10px; right: -10px; bottom: 0; }
+        .resizer:hover, .resizer:active { background: #0e639c; }
+
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        #editor-container { flex: 1; }
+
+        #overlay { 
+            position: absolute; 
+            top: 0; 
+            right: 0; 
+            bottom: 0; 
+            background: rgba(30,30,30,0.95); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 22px; 
+            color: #888; 
+            z-index: 10;
+        }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: #252526; padding: 25px; border-radius: 8px; width: 350px; max-height: 80vh; display: flex; flex-direction: column; }
+        .modal-content h3 { margin-top: 0; color: white; margin-bottom: 20px; }
+        
+        .settings-content { 
+            flex: 1; 
+            overflow-y: auto; 
+            max-height: calc(80vh - 120px);
+            padding-right: 5px;
+        }
+        .settings-content::-webkit-scrollbar { width: 6px; }
+        .settings-content::-webkit-scrollbar-track { background: #2d2d30; }
+        .settings-content::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        
+        .setting-group { margin-bottom: 20px; }
+        .setting-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+        .setting-label { 
+            flex: 1; 
+            margin-right: 20px; 
+            font-size: 14px;
+        }
+        .setting-control { 
+            flex-shrink: 0; 
+            width: 120px; 
+            text-align: right;
+        }
+        .setting-control select, 
+        .setting-control input[type="range"] { 
+            width: 100%; 
+            background: #3c3c3c; 
+            border: 1px solid #555; 
+            color: white; 
+            border-radius: 4px;
+            padding: 5px;
+        }
+        .setting-control input[type="checkbox"] { 
+            width: 18px; 
+            height: 18px; 
+            accent-color: #0e639c;
+        }
+        .slider-value { 
+            display: inline-block; 
+            margin-left: 10px; 
+            min-width: 40px; 
+            text-align: center;
+        }
+        
+        .modal-actions { text-align: right; margin-top: 20px; padding-top: 20px; border-top: 1px solid #333; }
+        .modal-actions button { margin-left: 10px; padding: 8px 16px; cursor: pointer; border-radius: 4px; border: none; }
+        .no-select { user-select: none; -webkit-user-select: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                Files
+                <button onclick="showCreateModal()">+</button>
+            </div>
+            <div class="file-list" id="fileList"></div>
+            <div class="sidebar-footer">
+                <button class="settings-btn" onclick="showSettingsModal()">⚙️</button>
+            </div>
+        </div>
+
+        <div class="resizer" id="resizer"></div>
+
+        <div class="main">
+            <div id="editor-container"></div>
+        </div>
+
+        <div id="overlay">请选择或创建一个文件</div>
+    </div>
+
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <h3>新建文件</h3>
+            <input type="text" id="fileNameInput" placeholder="例如: main.js 或 index.html" autofocus>
+            <div class="modal-actions">
+                <button onclick="closeModal('createModal')" style="background:#666;color:white;">取消</button>
+                <button onclick="createFile()" style="background:#0e639c;color:white;">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <h3>编辑器设置</h3>
+            
+            <div class="settings-content">
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="fontSizeSlider">字体大小</label>
+                        <div class="setting-control">
+                            <input type="range" id="fontSizeSlider" min="10" max="24" step="1">
+                            <span class="slider-value" id="fontSizeValue">16px</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="wordWrapCheckbox">自动换行</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="wordWrapCheckbox">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="autoSaveCheckbox">自动保存</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="autoSaveCheckbox">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="autoCloseBrackets">自动补全括号</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="autoCloseBrackets">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="showLineNumbers">显示行号</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="showLineNumbers">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="highlightCurrentLine">高亮当前行</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="highlightCurrentLine">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button onclick="closeModal('settingsModal')" style="background:#666;color:white;">关闭</button>
+                <button onclick="applySettings()" style="background:#0e639c;color:white;">应用</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+    
+    <script>
+        let editor;
+        let files = JSON.parse(localStorage.getItem('tourtides_files')) || {};
+        let currentFile = null;
+        const overlay = document.getElementById('overlay');
+        const sidebar = document.getElementById('sidebar');
+        
+        // 加载设置
+        let settings = JSON.parse(localStorage.getItem('tourtides_settings')) || {
+            fontSize: 16,
+            wordWrap: false,
+            autoSave: true,
+            autoCloseBrackets: true,
+            showLineNumbers: true,
+            highlightCurrentLine: true
+        };
+
+        // 初始化编辑器
+        require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' }});
+        require(['vs/editor/editor.main'], () => {
+            editor = monaco.editor.create(document.getElementById('editor-container'), {
+                value: '',
+                language: 'plaintext',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                minimap: { enabled: false },
+                fontSize: settings.fontSize,
+                tabSize: 2,
+                autoIndent: true,
+                wordWrap: settings.wordWrap ? 'on' : 'off',
+                formatOnType: true,
+                lineNumbers: settings.showLineNumbers ? 'on' : 'off',
+                renderLineHighlight: settings.highlightCurrentLine ? 'all' : 'none'
+            });
+
+            // 加载设置到UI
+            loadSettingsToUI();
+
+            // 自动补全
+            if (settings.autoCloseBrackets) {
+                editor.onDidType((text) => {
+                    const matching = { '(': ')', '{': '}', '[': ']', '"': '"', "'": "'" };
+                    if (matching[text]) {
+                        editor.trigger('keyboard', 'type', { text: matching[text] });
+                        editor.trigger('keyboard', 'cursorLeft');
+      }<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TourTi Editor</title>
+    <style>
+        body { margin:0; height: 100vh; overflow: hidden; background: #1e1e1e; color: #d4d4d4; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        .container { 
+            display: flex; 
+            height: 100%; 
+            position: relative;
+        }
+
+        .sidebar { width: 280px; background: #252526; border-right: 1px solid #333; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 12px 15px; font-weight: bold; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header button { background: #0e639c; border: none; color: white; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-size: 18px; }
+        .file-list { flex:1; overflow-y: auto; padding: 10px; }
+        
+        .file-item { display: flex; align-items: center; padding: 8px; border-radius: 4px; margin-bottom: 5px; background: #2d2d30; }
+        .file-item.active { background: #094771; }
+        .file-name { flex: 1; cursor: pointer; padding: 2px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-actions { display: flex; gap: 5px; }
+        .file-actions button { background: #3a3a3a; border: none; color: #ccc; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px; }
+        .file-actions button:hover { background: #555; }
+        .file-actions .save-btn { color: #4ec9b0; }
+        .empty-tip { color: #888; padding: 20px; text-align: center; font-size: 13px; }
+        
+        .sidebar-footer { border-top: 1px solid #333; padding: 10px; display: flex; justify-content: center; }
+        .settings-btn { background: none; border: none; color: #888; cursor: pointer; font-size: 20px; width: 100%; text-align: center; }
+        .settings-btn:hover { color: #fff; }
+
+        .resizer { width: 15px; background: #333; cursor: col-resize; user-select: none; touch-action: none; position: relative; }
+        .resizer::after { content: ''; position: absolute; top:0; left: -10px; right: -10px; bottom: 0; }
+        .resizer:hover, .resizer:active { background: #0e639c; }
+
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        #editor-container { flex: 1; }
+
+        #overlay { 
+            position: absolute; 
+            top: 0; 
+            right: 0; 
+            bottom: 0; 
+            background: rgba(30,30,30,0.95); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 22px; 
+            color: #888; 
+            z-index: 10;
+        }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: #252526; padding: 25px; border-radius: 8px; width: 350px; max-height: 80vh; display: flex; flex-direction: column; }
+        .modal-content h3 { margin-top: 0; color: white; margin-bottom: 20px; }
+        
+        .settings-content { 
+            flex: 1; 
+            overflow-y: auto; 
+            max-height: calc(80vh - 120px);
+            padding-right: 5px;
+        }
+        .settings-content::-webkit-scrollbar { width: 6px; }
+        .settings-content::-webkit-scrollbar-track { background: #2d2d30; }
+        .settings-content::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        
+        .setting-group { margin-bottom: 20px; }
+        .setting-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+        .setting-label { 
+            flex: 1; 
+            margin-right: 20px; 
+            font-size: 14px;
+        }
+        .setting-control { 
+            flex-shrink: 0; 
+            width: 120px; 
+            text-align: right;
+        }
+        .setting-control select, 
+        .setting-control input[type="range"] { 
+            width: 100%; 
+            background: #3c3c3c; 
+            border: 1px solid #555; 
+            color: white; 
+            border-radius: 4px;
+            padding: 5px;
+        }
+        .setting-control input[type="checkbox"] { 
+            width: 18px; 
+            height: 18px; 
+            accent-color: #0e639c;
+        }
+        .slider-value { 
+            display: inline-block; 
+            margin-left: 10px; 
+            min-width: 40px; 
+            text-align: center;
+        }
+        
+        .modal-actions { text-align: right; margin-top: 20px; padding-top: 20px; border-top: 1px solid #333; }
+        .modal-actions button { margin-left: 10px; padding: 8px 16px; cursor: pointer; border-radius: 4px; border: none; }
+        .no-select { user-select: none; -webkit-user-select: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                Files
+                <button onclick="showCreateModal()">+</button>
+            </div>
+            <div class="file-list" id="fileList"></div>
+            <div class="sidebar-footer">
+                <button class="settings-btn" onclick="showSettingsModal()">⚙️</button>
+            </div>
+        </div>
+
+        <div class="resizer" id="resizer"></div>
+
+        <div class="main">
+            <div id="editor-container"></div>
+        </div>
+
+        <div id="overlay">请选择或创建一个文件</div>
+    </div>
+
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <h3>新建文件</h3>
+            <input type="text" id="fileNameInput" placeholder="例如: main.js 或 index.html" autofocus>
+            <div class="modal-actions">
+                <button onclick="closeModal('createModal')" style="background:#666;color:white;">取消</button>
+                <button onclick="createFile()" style="background:#0e639c;color:white;">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <h3>编辑器设置</h3>
+            
+            <div class="settings-content">
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="fontSizeSlider">字体大小</label>
+                        <div class="setting-control">
+                            <input type="range" id="fontSizeSlider" min="10" max="24" step="1">
+                            <span class="slider-value" id="fontSizeValue">16px</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="wordWrapCheckbox">自动换行</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="wordWrapCheckbox">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="autoSaveCheckbox">自动保存</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="autoSaveCheckbox">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="autoCloseBrackets">自动补全括号</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="autoCloseBrackets">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="showLineNumbers">显示行号</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="showLineNumbers">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="highlightCurrentLine">高亮当前行</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="highlightCurrentLine">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button onclick="closeModal('settingsModal')" style="background:#666;color:white;">关闭</button>
+                <button onclick="applySettings()" style="background:#0e639c;color:white;">应用</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+    
+    <script>
+        let editor;
+        let files = JSON.parse(localStorage.getItem('tourtides_files')) || {};
+        let currentFile = null;
+        const overlay = document.getElementById('overlay');
+        const sidebar = document.getElementById('sidebar');
+        
+        // 加载设置
+        let settings = JSON.parse(localStorage.getItem('tourtides_settings')) || {
+            fontSize: 16,
+            wordWrap: false,
+            autoSave: true,
+            autoCloseBrackets: true,
+            showLineNumbers: true,
+            highlightCurrentLine: true
+        };
+
+        // 初始化编辑器
+        require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' }});
+        require(['vs/editor/editor.main'], () => {
+            editor = monaco.editor.create(document.getElementById('editor-container'), {
+                value: '',
+                language: 'plaintext',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                minimap: { enabled: false },
+                fontSize: settings.fontSize,
+                tabSize: 2,
+                autoIndent: true,
+                wordWrap: settings.wordWrap ? 'on' : 'off',
+                formatOnType: true,
+                lineNumbers: settings.showLineNumbers ? 'on' : 'off',
+                renderLineHighlight: settings.highlightCurrentLine ? 'all' : 'none'
+            });
+
+            // 加载设置到UI
+            loadSettingsToUI();
+
+            // 自动补全
+            if (settings.autoCloseBrackets) {
+                editor.onDidType((text) => {
+                    const matching = { '(': ')', '{': '}', '[': ']', '"': '"', "'": "'" };
+                    if (matching[text]) {
+                        editor.trigger('keyboard', 'type', { text: matching[text] });
+                        editor.trigger('keyboard', 'cursorLeft');
+                    }
+                });
+            }
+
+            // 自动保存
+            if (settings.autoSave) {
+                editor.onDidChangeModelContent(() => {
+                    if (currentFile) {
+                        setTimeout(() => {
+                            files[currentFile] = editor.getValue();
+                            localStorage.setItem('tourtides_files', JSON.stringify(files));
+                        }, 1000);
+                    }
+                });
+            }
+
+            renderFiles();
+            updateOverlay();
+            updateOverlayPosition();
+        });
+
+        // 根据文件名获取语言
+        function getLanguageFromFileName(name) {
+            if (name.endsWith('.js')) return 'javascript';
+            if (name.endsWith('.html') || name.endsWith('.htm')) return 'html';
+            if (name.endsWith('.css')) return 'css';
+            if (name.endsWith('.json')) return 'json';
+            if (name.endsWith('.md')) return 'markdown';
+            return 'plaintext';
+        }
+
+        // 渲染文件列表
+        function renderFiles() {
+            const listEl = document.getElementById('fileList');
+            listEl.innerHTML = '';
+            const names = Object.keys(files);
+            if (names.length === 0) {
+                listEl.innerHTML = '<div class="empty-tip">暂无文件<br>点击 + 创建</div>';
+                return;
+            }
+            names.forEach(name => {
+                const div = document.createElement('div');
+                div.className = 'file-item' + (name === currentFile ? ' active' : '');
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'file-name';
+                nameSpan.textContent = name;
+                nameSpan.onclick = () => selectFile(name);
+
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'file-actions';
+                
+                const saveBtn = document.createElement('button');
+                saveBtn.textContent = 'Save';
+                saveBtn.className = 'save-btn';
+                saveBtn.onclick = (e) => { e.stopPropagation(); saveFile(name); };
+                
+                const dlBtn = document.createElement('button');
+                dlBtn.textContent = 'DL';
+                dlBtn.onclick = (e) => { e.stopPropagation(); downloadFile(name); };
+
+                actionsDiv.appendChild(saveBtn);
+                actionsDiv.appendChild(dlBtn);
+                
+                div.appendChild(nameSpan);
+                div.appendChild(actionsDiv);
+                listEl.appendChild(div);
+            });
+        }
+
+        // 选择文件
+        function selectFile(name) {
+            currentFile = name;
+            editor.setValue(files[name]);
+            
+            // 切换语言模式
+            const language = getLanguageFromFileName(name);
+            const model = editor.getModel();
+            if (model) {
+                monaco.editor.setModelLanguage(model, language);
+            }
+
+            updateOverlay();
+            renderFiles();
+        }
+
+        // 保存文件
+        function saveFile(name) {
+            if (!name) return;
+            files[name] = editor.getValue();
+            localStorage.setItem('tourtides_files', JSON.stringify(files));
+            overlay.textContent = `"${name}" 已保存`;
+            overlay.style.display = 'flex';
+            setTimeout(() => { overlay.style.display = 'none'; updateOverlay(); }, 800);
+        }
+
+        // 下载文件
+        function downloadFile(name) {
+            const content = files[name] || '';
+            const blob = new Blob([content], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = name;
+            a.click();
+      }<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TourTi Editor</title>
+    <style>
+        body { margin:0; height: 100vh; overflow: hidden; background: #1e1e1e; color: #d4d4d4; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        .container { 
+            display: flex; 
+            height: 100%; 
+            position: relative;
+        }
+
+        .sidebar { width: 280px; background: #252526; border-right: 1px solid #333; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 12px 15px; font-weight: bold; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header button { background: #0e639c; border: none; color: white; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-size: 18px; }
+        .file-list { flex:1; overflow-y: auto; padding: 10px; }
+        
+        .file-item { display: flex; align-items: center; padding: 8px; border-radius: 4px; margin-bottom: 5px; background: #2d2d30; }
+        .file-item.active { background: #094771; }
+        .file-name { flex: 1; cursor: pointer; padding: 2px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-actions { display: flex; gap: 5px; }
+        .file-actions button { background: #3a3a3a; border: none; color: #ccc; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px; }
+        .file-actions button:hover { background: #555; }
+        .file-actions .save-btn { color: #4ec9b0; }
+        .empty-tip { color: #888; padding: 20px; text-align: center; font-size: 13px; }
+        
+        .sidebar-footer { border-top: 1px solid #333; padding: 10px; display: flex; justify-content: center; }
+        .settings-btn { background: none; border: none; color: #888; cursor: pointer; font-size: 20px; width: 100%; text-align: center; }
+        .settings-btn:hover { color: #fff; }
+
+        .resizer { width: 15px; background: #333; cursor: col-resize; user-select: none; touch-action: none; position: relative; }
+        .resizer::after { content: ''; position: absolute; top:0; left: -10px; right: -10px; bottom: 0; }
+        .resizer:hover, .resizer:active { background: #0e639c; }
+
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        #editor-container { flex: 1; }
+
+        #overlay { 
+            position: absolute; 
+            top: 0; 
+            right: 0; 
+            bottom: 0; 
+            background: rgba(30,30,30,0.95); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 22px; 
+            color: #888; 
+            z-index: 10;
+        }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: #252526; padding: 25px; border-radius: 8px; width: 350px; max-height: 80vh; display: flex; flex-direction: column; }
+        .modal-content h3 { margin-top: 0; color: white; margin-bottom: 20px; }
+        
+        .settings-content { 
+            flex: 1; 
+            overflow-y: auto; 
+            max-height: calc(80vh - 120px);
+            padding-right: 5px;
+        }
+        .settings-content::-webkit-scrollbar { width: 6px; }
+        .settings-content::-webkit-scrollbar-track { background: #2d2d30; }
+        .settings-content::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        
+        .setting-group { margin-bottom: 20px; }
+        .setting-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+        .setting-label { 
+            flex: 1; 
+            margin-right: 20px; 
+            font-size: 14px;
+        }
+        .setting-control { 
+            flex-shrink: 0; 
+            width: 120px; 
+            text-align: right;
+        }
+        .setting-control select, 
+        .setting-control input[type="range"] { 
+            width: 100%; 
+            background: #3c3c3c; 
+            border: 1px solid #555; 
+            color: white; 
+            border-radius: 4px;
+            padding: 5px;
+        }
+        .setting-control input[type="checkbox"] { 
+            width: 18px; 
+            height: 18px; 
+            accent-color: #0e639c;
+        }
+        .slider-value { 
+            display: inline-block; 
+            margin-left: 10px; 
+            min-width: 40px; 
+            text-align: center;
+        }
+        
+        .modal-actions { text-align: right; margin-top: 20px; padding-top: 20px; border-top: 1px solid #333; }
+        .modal-actions button { margin-left: 10px; padding: 8px 16px; cursor: pointer; border-radius: 4px; border: none; }
+        .no-select { user-select: none; -webkit-user-select: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                Files
+                <button onclick="showCreateModal()">+</button>
+            </div>
+            <div class="file-list" id="fileList"></div>
+            <div class="sidebar-footer">
+                <button class="settings-btn" onclick="showSettingsModal()">⚙️</button>
+            </div>
+        </div>
+
+        <div class="resizer" id="resizer"></div>
+
+        <div class="main">
+            <div id="editor-container"></div>
+        </div>
+
+        <div id="overlay">请选择或创建一个文件</div>
+    </div>
+
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <h3>新建文件</h3>
+            <input type="text" id="fileNameInput" placeholder="例如: main.js 或 index.html" autofocus>
+            <div class="modal-actions">
+                <button onclick="closeModal('createModal')" style="background:#666;color:white;">取消</button>
+                <button onclick="createFile()" style="background:#0e639c;color:white;">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <h3>编辑器设置</h3>
+            
+            <div class="settings-content">
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="fontSizeSlider">字体大小</label>
+                        <div class="setting-control">
+                            <input type="range" id="fontSizeSlider" min="10" max="24" step="1">
+                            <span class="slider-value" id="fontSizeValue">16px</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="wordWrapCheckbox">自动换行</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="wordWrapCheckbox">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="autoSaveCheckbox">自动保存</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="autoSaveCheckbox">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="autoCloseBrackets">自动补全括号</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="autoCloseBrackets">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="showLineNumbers">显示行号</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="showLineNumbers">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="highlightCurrentLine">高亮当前行</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="highlightCurrentLine">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button onclick="closeModal('settingsModal')" style="background:#666;color:white;">关闭</button>
+                <button onclick="applySettings()" style="background:#0e639c;color:white;">应用</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+    
+    <script>
+        let editor;
+        let files = JSON.parse(localStorage.getItem('tourtides_files')) || {};
+        let currentFile = null;
+        const overlay = document.getElementById('overlay');
+        const sidebar = document.getElementById('sidebar');
+        
+        // 加载设置
+        let settings = JSON.parse(localStorage.getItem('tourtides_settings')) || {
+            fontSize: 16,
+            wordWrap: false,
+            autoSave: true,
+            autoCloseBrackets: true,
+            showLineNumbers: true,
+            highlightCurrentLine: true
+        };
+
+        // 初始化编辑器
+        require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' }});
+        require(['vs/editor/editor.main'], () => {
+            editor = monaco.editor.create(document.getElementById('editor-container'), {
+                value: '',
+                language: 'plaintext',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                minimap: { enabled: false },
+                fontSize: settings.fontSize,
+                tabSize: 2,
+                autoIndent: true,
+                wordWrap: settings.wordWrap ? 'on' : 'off',
+                formatOnType: true,
+                lineNumbers: settings.showLineNumbers ? 'on' : 'off',
+                renderLineHighlight: settings.highlightCurrentLine ? 'all' : 'none'
+            });
+
+            // 加载设置到UI
+            loadSettingsToUI();
+
+            // 自动补全
+            if (settings.autoCloseBrackets) {
+                editor.onDidType((text) => {
+                    const matching = { '(': ')', '{': '}', '[': ']', '"': '"', "'": "'" };
+                    if (matching[text]) {
+                        editor.trigger('keyboard', 'type', { text: matching[text] });
+                        editor.trigger('keyboard', 'cursorLeft');
+                    }
+                });
+            }
+
+            // 自动保存
+            if (settings.autoSave) {
+                editor.onDidChangeModelContent(() => {
+                    if (currentFile) {
+                        setTimeout(() => {
+                            files[currentFile] = editor.getValue();
+                            localStorage.setItem('tourtides_files', JSON.stringify(files));
+                        }, 1000);
+                    }
+                });
+            }
+
+            renderFiles();
+            updateOverlay();
+            updateOverlayPosition();
+        });
+
+        // 根据文件名获取语言
+        function getLanguageFromFileName(name) {
+            if (name.endsWith('.js')) return 'javascript';
+            if (name.endsWith('.html') || name.endsWith('.htm')) return 'html';
+            if (name.endsWith('.css')) return 'css';
+            if (name.endsWith('.json')) return 'json';
+            if (name.endsWith('.md')) return 'markdown';
+            return 'plaintext';
+        }
+
+        // 渲染文件列表
+        function renderFiles() {
+            const listEl = document.getElementById('fileList');
+            listEl.innerHTML = '';
+            const names = Object.keys(files);
+            if (names.length === 0) {
+                listEl.innerHTML = '<div class="empty-tip">暂无文件<br>点击 + 创建</div>';
+                return;
+            }
+            names.forEach(name => {
+                const div = document.createElement('div');
+                div.className = 'file-item' + (name === currentFile ? ' active' : '');
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'file-name';
+                nameSpan.textContent = name;
+                nameSpan.onclick = () => selectFile(name);
+
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'file-actions';
+                
+                const saveBtn = document.createElement('button');
+                saveBtn.textContent = 'Save';
+                saveBtn.className = 'save-btn';
+                saveBtn.onclick = (e) => { e.stopPropagation(); saveFile(name); };
+                
+                const dlBtn = document.createElement('button');
+                dlBtn.textContent = 'DL';
+                dlBtn.onclick = (e) => { e.stopPropagation(); downloadFile(name); };
+
+                actionsDiv.appendChild(saveBtn);
+                actionsDiv.appendChild(dlBtn);
+                
+                div.appendChild(nameSpan);
+                div.appendChild(actionsDiv);
+                listEl.appendChild(div);
+            });
+        }
+
+        // 选择文件
+        function selectFile(name) {
+            currentFile = name;
+            editor.setValue(files[name]);
+            
+            // 切换语言模式
+            const language = getLanguageFromFileName(name);
+            const model = editor.getModel();
+            if (model) {
+                monaco.editor.setModelLanguage(model, language);
+            }
+
+            updateOverlay();
+            renderFiles();
+        }
+
+        // 保存文件
+        function saveFile(name) {
+            if (!name) return;
+            files[name] = editor.getValue();
+            localStorage.setItem('tourtides_files', JSON.stringify(files));
+            overlay.textContent = `"${name}" 已保存`;
+            overlay.style.display = 'flex';
+            setTimeout(() => { overlay.style.display = 'none'; updateOverlay(); }, 800);
+        }
+
+        // 下载文件
+        function downloadFile(name) {
+            const content = files[name] || '';
+            const blob = new Blob([content], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = name;
+            a.click();
+        }
+
+        // 遮罩层
+        function updateOverlay() {
+            overlay.style.display = currentFile ? 'none' : 'flex';
+        }
+
+        // 更新遮罩层位置
+        function updateOverlayPosition() {
+            const sidebarWidth = sidebar.offsetWidth;
+            overlay.style.left = sidebarWidth + 'px';
+        }
+
+        // 新建文件
+        function showCreateModal() { 
+            document.getElementById('createModal').style.display = 'flex'; 
+        }
+        
+        // 关闭弹窗
+        function closeModal(modalId) { 
+            document.getElementById(modalId).style.display = 'none'; 
+        }
+        
+        function createFile() {
+            const name = document.getElementById('fileNameInput').value.trim();
+            if (!name) return alert('文件名不能为空');
+            if (files[name]) return alert('文件已存在');
+            
+            // 根据后缀给个默认内容
+            let defaultContent = '// Hello TourTi\n';
+            if (name.endsWith('.html')) {
+                defaultContent = '<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n<title>Document</title>\n</head>\n<body>\n\n</body>\n</html>';
+            }
+            
+            files[name] = defaultContent;
+            localStorage.setItem('tourtides_files', JSON.stringify(files));
+            closeModal('createModal');
+            selectFile(name);
+            renderFiles();
+        }
+
+        // 设置相关功能
+        function showSettingsModal() {
+            loadSettingsToUI();
+            document.getElementById('settingsModal').style.display = 'flex';
+        }
+        
+        function loadSettingsToUI() {
+            // 设置字体大小滑块
+            const fontSizeSlider = document.getElementById('fontSizeSlider');
+            const fontSizeValue = document.getElementById('fontSizeValue');
+            fontSizeSlider.value = settings.fontSize;
+            fontSizeValue.textContent = settings.fontSize + 'px';
+            
+            // 更新字体大小显示
+            fontSizeSlider.addEventListener('input', function() {
+                fontSizeValue.textContent = this.value + 'px';
+            });
+            
+            // 设置复选框
+            document.getElementById('wordWrapCheckbox').checked = settings.wordWrap;
+            document.getElementById('autoSaveCheckbox').checked = settings.autoSave;
+            document.getElementById('autoCloseBrackets').checked = settings.autoCloseBrackets;
+            document.getElementById('showLineNumbers').checked = settings.showLineNumbers;
+            document.getElementById('highlightCurrentLine').checked = settings.highlightCurrentLine;
+        }
+        
+        function applySettings() {
+            // 保存设置
+            settings.fontSize = parseInt(document.getElementById('fontSizeSlider').value);
+            settings.wordWrap = document.getElementById('wordWrapCheckbox').checked;
+            settings.autoSave = document.getElementById('autoSaveCheckbox').checked;
+            settings.autoCloseBrackets = document.getElementById('autoCloseBrackets').checked;
+            settings.showLineNumbers = document.getElementById('showLineNumbers').checked;
+            settings.highlightCurrentLine = document.getElementById('highlightCurrentLine').checked;
+            
+            localStorage.setItem('tourtides_settings', JSON.stringify(settings));<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TourTi Editor</title>
+    <style>
+        body { margin:0; height: 100vh; overflow: hidden; background: #1e1e1e; color: #d4d4d4; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        .container { 
+            display: flex; 
+            height: 100%; 
+            position: relative;
+        }
+
+        .sidebar { width: 280px; background: #252526; border-right: 1px solid #333; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 12px 15px; font-weight: bold; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header button { background: #0e639c; border: none; color: white; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-size: 18px; }
+        .file-list { flex:1; overflow-y: auto; padding: 10px; }
+        
+        .file-item { display: flex; align-items: center; padding: 8px; border-radius: 4px; margin-bottom: 5px; background: #2d2d30; }
+        .file-item.active { background: #094771; }
+        .file-name { flex: 1; cursor: pointer; padding: 2px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-actions { display: flex; gap: 5px; }
+        .file-actions button { background: #3a3a3a; border: none; color: #ccc; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px; }
+        .file-actions button:hover { background: #555; }
+        .file-actions .save-btn { color: #4ec9b0; }
+        .empty-tip { color: #888; padding: 20px; text-align: center; font-size: 13px; }
+        
+        .sidebar-footer { border-top: 1px solid #333; padding: 10px; display: flex; justify-content: center; }
+        .settings-btn { background: none; border: none; color: #888; cursor: pointer; font-size: 20px; width: 100%; text-align: center; }
+        .settings-btn:hover { color: #fff; }
+
+        .resizer { width: 15px; background: #333; cursor: col-resize; user-select: none; touch-action: none; position: relative; }
+        .resizer::after { content: ''; position: absolute; top:0; left: -10px; right: -10px; bottom: 0; }
+        .resizer:hover, .resizer:active { background: #0e639c; }
+
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        #editor-container { flex: 1; }
+
+        #overlay { 
+            position: absolute; 
+            top: 0; 
+            right: 0; 
+            bottom: 0; 
+            background: rgba(30,30,30,0.95); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 22px; 
+            color: #888; 
+            z-index: 10;
+        }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: #252526; padding: 25px; border-radius: 8px; width: 350px; max-height: 80vh; display: flex; flex-direction: column; }
+        .modal-content h3 { margin-top: 0; color: white; margin-bottom: 20px; }
+        
+        .settings-content { 
+            flex: 1; 
+            overflow-y: auto; 
+            max-height: calc(80vh - 120px);
+            padding-right: 5px;
+        }
+        .settings-content::-webkit-scrollbar { width: 6px; }
+        .settings-content::-webkit-scrollbar-track { background: #2d2d30; }
+        .settings-content::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        
+        .setting-group { margin-bottom: 20px; }
+        .setting-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+        .setting-label { 
+            flex: 1; 
+            margin-right: 20px; 
+            font-size: 14px;
+        }
+        .setting-control { 
+            flex-shrink: 0; 
+            width: 120px; 
+            text-align: right;
+        }
+        .setting-control select, 
+        .setting-control input[type="range"] { 
+            width: 100%; 
+            background: #3c3c3c; 
+            border: 1px solid #555; 
+            color: white; 
+            border-radius: 4px;
+            padding: 5px;
+        }
+        .setting-control input[type="checkbox"] { 
+            width: 18px; 
+            height: 18px; 
+            accent-color: #0e639c;
+        }
+        .slider-value { 
+            display: inline-block; 
+            margin-left: 10px; 
+            min-width: 40px; 
+            text-align: center;
+        }
+        
+        .modal-actions { text-align: right; margin-top: 20px; padding-top: 20px; border-top: 1px solid #333; }
+        .modal-actions button { margin-left: 10px; padding: 8px 16px; cursor: pointer; border-radius: 4px; border: none; }
+        .no-select { user-select: none; -webkit-user-select: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                Files
+                <button onclick="showCreateModal()">+</button>
+            </div>
+            <div class="file-list" id="fileList"></div>
+            <div class="sidebar-footer">
+                <button class="settings-btn" onclick="showSettingsModal()">⚙️</button>
+            </div>
+        </div>
+
+        <div class="resizer" id="resizer"></div>
+
+        <div class="main">
+            <div id="editor-container"></div>
+        </div>
+
+        <div id="overlay">请选择或创建一个文件</div>
+    </div>
+
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <h3>新建文件</h3>
+            <input type="text" id="fileNameInput" placeholder="例如: main.js 或 index.html" autofocus>
+            <div class="modal-actions">
+                <button onclick="closeModal('createModal')" style="background:#666;color:white;">取消</button>
+                <button onclick="createFile()" style="background:#0e639c;color:white;">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <h3>编辑器设置</h3>
+            
+            <div class="settings-content">
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="fontSizeSlider">字体大小</label>
+                        <div class="setting-control">
+                            <input type="range" id="fontSizeSlider" min="10" max="24" step="1">
+                            <span class="slider-value" id="fontSizeValue">16px</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="wordWrapCheckbox">自动换行</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="wordWrapCheckbox">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="autoSaveCheckbox">自动保存</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="autoSaveCheckbox">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="autoCloseBrackets">自动补全括号</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="autoCloseBrackets">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="showLineNumbers">显示行号</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="showLineNumbers">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="highlightCurrentLine">高亮当前行</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="highlightCurrentLine">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button onclick="closeModal('settingsModal')" style="background:#666;color:white;">关闭</button>
+                <button onclick="applySettings()" style="background:#0e639c;color:white;">应用</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+    
+    <script>
+        let editor;
+        let files = JSON.parse(localStorage.getItem('tourtides_files')) || {};
+        let currentFile = null;
+        const overlay = document.getElementById('overlay');
+        const sidebar = document.getElementById('sidebar');
+        
+        // 加载设置
+        let settings = JSON.parse(localStorage.getItem('tourtides_settings')) || {
+            fontSize: 16,
+            wordWrap: false,
+            autoSave: true,
+            autoCloseBrackets: true,
+            showLineNumbers: true,
+            highlightCurrentLine: true
+        };
+
+        // 初始化编辑器
+        require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' }});
+        require(['vs/editor/editor.main'], () => {
+            editor = monaco.editor.create(document.getElementById('editor-container'), {
+                value: '',
+                language: 'plaintext',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                minimap: { enabled: false },
+                fontSize: settings.fontSize,
+                tabSize: 2,
+                autoIndent: true,
+                wordWrap: settings.wordWrap ? 'on' : 'off',
+                formatOnType: true,
+                lineNumbers: settings.showLineNumbers ? 'on' : 'off',
+                renderLineHighlight: settings.highlightCurrentLine ? 'all' : 'none'
+            });
+
+            // 加载设置到UI
+            loadSettingsToUI();
+
+            // 自动补全
+            if (settings.autoCloseBrackets) {
+                editor.onDidType((text) => {
+                    const matching = { '(': ')', '{': '}', '[': ']', '"': '"', "'": "'" };
+                    if (matching[text]) {
+                        editor.trigger('keyboard', 'type', { text: matching[text] });
+                        editor.trigger('keyboard', 'cursorLeft');
+                    }
+                });
+            }
+
+            // 自动保存
+            if (settings.autoSave) {
+                editor.onDidChangeModelContent(() => {
+                    if (currentFile) {
+                        setTimeout(() => {
+                            files[currentFile] = editor.getValue();
+                            localStorage.setItem('tourtides_files', JSON.stringify(files));
+                        }, 1000);
+                    }
+                });
+            }
+
+            renderFiles();
+            updateOverlay();
+            updateOverlayPosition();
+        });
+
+        // 根据文件名获取语言
+        function getLanguageFromFileName(name) {
+            if (name.endsWith('.js')) return 'javascript';
+            if (name.endsWith('.html') || name.endsWith('.htm')) return 'html';
+            if (name.endsWith('.css')) return 'css';
+            if (name.endsWith('.json')) return 'json';
+            if (name.endsWith('.md')) return 'markdown';
+            return 'plaintext';
+        }
+
+        // 渲染文件列表
+        function renderFiles() {
+            const listEl = document.getElementById('fileList');
+            listEl.innerHTML = '';
+            const names = Object.keys(files);
+            if (names.length === 0) {
+                listEl.innerHTML = '<div class="empty-tip">暂无文件<br>点击 + 创建</div>';
+                return;
+            }
+            names.forEach(name => {
+                const div = document.createElement('div');
+                div.className = 'file-item' + (name === currentFile ? ' active' : '');
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'file-name';
+                nameSpan.textContent = name;
+                nameSpan.onclick = () => selectFile(name);
+
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'file-actions';
+                
+                const saveBtn = document.createElement('button');
+                saveBtn.textContent = 'Save';
+                saveBtn.className = 'save-btn';
+                saveBtn.onclick = (e) => { e.stopPropagation(); saveFile(name); };
+                
+                const dlBtn = document.createElement('button');
+                dlBtn.textContent = 'DL';
+                dlBtn.onclick = (e) => { e.stopPropagation(); downloadFile(name); };
+
+                actionsDiv.appendChild(saveBtn);
+                actionsDiv.appendChild(dlBtn);
+                
+                div.appendChild(nameSpan);
+                div.appendChild(actionsDiv);
+                listEl.appendChild(div);
+            });
+        }
+
+        // 选择文件
+        function selectFile(name) {
+            currentFile = name;
+            editor.setValue(files[name]);
+            
+            // 切换语言模式
+            const language = getLanguageFromFileName(name);
+            const model = editor.getModel();
+            if (model) {
+                monaco.editor.setModelLanguage(model, language);
+            }
+
+            updateOverlay();
+            renderFiles();
+        }
+
+        // 保存文件
+        function saveFile(name) {
+            if (!name) return;
+            files[name] = editor.getValue();
+            localStorage.setItem('tourtides_files', JSON.stringify(files));
+            overlay.textContent = `"${name}" 已保存`;
+            overlay.style.display = 'flex';
+            setTimeout(() => { overlay.style.display = 'none'; updateOverlay(); }, 800);
+        }
+
+        // 下载文件
+        function downloadFile(name) {
+            const content = files[name] || '';
+            const blob = new Blob([content], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = name;
+            a.click();
+        }
+
+        // 遮罩层
+        function updateOverlay() {
+            overlay.style.display = currentFile ? 'none' : 'flex';
+        }
+
+        // 更新遮罩层位置
+        function updateOverlayPosition() {
+            const sidebarWidth = sidebar.offsetWidth;
+            overlay.style.left = sidebarWidth + 'px';
+        }
+
+        // 新建文件
+        function showCreateModal() { 
+            document.getElementById('createModal').style.display = 'flex'; 
+        }
+        
+        // 关闭弹窗
+        function closeModal(modalId) { 
+            document.getElementById(modalId).style.display = 'none'; 
+        }
+        
+        function createFile() {
+            const name = document.getElementById('fileNameInput').value.trim();
+            if (!name) return alert('文件名不能为空');
+            if (files[name]) return alert('文件已存在');
+            
+            // 根据后缀给个默认内容
+            let defaultContent = '// Hello TourTi\n';
+            if (name.endsWith('.html')) {
+                defaultContent = '<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n<title>Document</title>\n</head>\n<body>\n\n</body>\n</html>';
+            }
+            
+            files[name] = defaultContent;
+            localStorage.setItem('tourtides_files', JSON.stringify(files));
+            closeModal('createModal');
+            selectFile(name);
+            renderFiles();
+        }
+
+        // 设置相关功能
+        function showSettingsModal() {
+            loadSettingsToUI();
+            document.getElementById('settingsModal').style.display = 'flex';
+        }
+        
+        function loadSettingsToUI() {
+            // 设置字体大小滑块
+            const fontSizeSlider = document.getElementById('fontSizeSlider');
+            const fontSizeValue = document.getElementById('fontSizeValue');
+            fontSizeSlider.value = settings.fontSize;
+            fontSizeValue.textContent = settings.fontSize + 'px';
+            
+            // 更新字体大小显示
+            fontSizeSlider.addEventListener('input', function() {
+                fontSizeValue.textContent = this.value + 'px';
+            });
+            
+            // 设置复选框
+            document.getElementById('wordWrapCheckbox').checked = settings.wordWrap;
+            document.getElementById('autoSaveCheckbox').checked = settings.autoSave;
+            document.getElementById('autoCloseBrackets').checked = settings.autoCloseBrackets;
+            document.getElementById('showLineNumbers').checked = settings.showLineNumbers;
+            document.getElementById('highlightCurrentLine').checked = settings.highlightCurrentLine;
+        }
+        
+        function applySettings() {
+            // 保存设置
+            settings.fontSize = parseInt(document.getElementById('fontSizeSlider').value);
+            settings.wordWrap = document.getElementById('wordWrapCheckbox').checked;
+            settings.autoSave = document.getElementById('autoSaveCheckbox').checked;
+            settings.autoCloseBrackets = document.getElementById('autoCloseBrackets').checked;
+            settings.showLineNumbers = document.getElementById('showLineNumbers').checked;
+            settings.highlightCurrentLine = document.getElementById('highlightCurrentLine').checked;
+            
+            localStorage.setItem('tourtides_settings', JSON.stringify(settings));
+            
+            // 应用设置
+            const updateOptions = {
+                fontSize: settings.fontSize,
+                wordWrap: settings.wordWrap ? 'on' : 'off',
+                lineNumbers: settings.showLineNumbers ? 'on' : 'off',
+                renderLineHighlight: settings.highlightCurrentLine ? 'all' : 'none'
+            };
+            editor.updateOptions(updateOptions);
+            
+            // 强制重新布局
+            editor.layout();
+            
+            // 应用自动补全括号
+            editor.onDidType = null; // 清空之前的监听
+            if (settings.autoCloseBrackets) {
+                editor.onDidType((text) => {
+                    const matching = { '(': ')', '{': '}', '[': ']', '"': '"', "'": "'" };
+                    if (matching[text]) {
+                        editor.trigger('keyboard', 'type', { text: matching[text] });
+                        editor.trigger('keyboard', 'cursorLeft');
+                    }
+                });
+            }
+            
+            // 应用自动保存
+            editor.onDidChangeModelContent = null; // 清空之前的监听
+            if (settings.autoSave && currentFile) {
+                editor.onDidChangeModelContent(() => {
+                    if (currentFile) {
+                        setTimeout(() => {
+                            files[currentFile] = editor.getValue();
+                            localStorage.setItem('tourtides_files', JSON.stringify(files));
+                        }, 1000);
+                    }
+                });
+      }<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TourTi Editor</title>
+    <style>
+        body { margin:0; height: 100vh; overflow: hidden; background: #1e1e1e; color: #d4d4d4; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        .container { 
+            display: flex; 
+            height: 100%; 
+            position: relative;
+        }
+
+        .sidebar { width: 280px; background: #252526; border-right: 1px solid #333; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 12px 15px; font-weight: bold; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header button { background: #0e639c; border: none; color: white; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-size: 18px; }
+        .file-list { flex:1; overflow-y: auto; padding: 10px; }
+        
+        .file-item { display: flex; align-items: center; padding: 8px; border-radius: 4px; margin-bottom: 5px; background: #2d2d30; }
+        .file-item.active { background: #094771; }
+        .file-name { flex: 1; cursor: pointer; padding: 2px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-actions { display: flex; gap: 5px; }
+        .file-actions button { background: #3a3a3a; border: none; color: #ccc; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px; }
+        .file-actions button:hover { background: #555; }
+        .file-actions .save-btn { color: #4ec9b0; }
+        .empty-tip { color: #888; padding: 20px; text-align: center; font-size: 13px; }
+        
+        .sidebar-footer { border-top: 1px solid #333; padding: 10px; display: flex; justify-content: center; }
+        .settings-btn { background: none; border: none; color: #888; cursor: pointer; font-size: 20px; width: 100%; text-align: center; }
+        .settings-btn:hover { color: #fff; }
+
+        .resizer { width: 15px; background: #333; cursor: col-resize; user-select: none; touch-action: none; position: relative; }
+        .resizer::after { content: ''; position: absolute; top:0; left: -10px; right: -10px; bottom: 0; }
+        .resizer:hover, .resizer:active { background: #0e639c; }
+
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        #editor-container { flex: 1; }
+
+        #overlay { 
+            position: absolute; 
+            top: 0; 
+            right: 0; 
+            bottom: 0; 
+            background: rgba(30,30,30,0.95); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 22px; 
+            color: #888; 
+            z-index: 10;
+        }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: #252526; padding: 25px; border-radius: 8px; width: 350px; max-height: 80vh; display: flex; flex-direction: column; }
+        .modal-content h3 { margin-top: 0; color: white; margin-bottom: 20px; }
+        
+        .settings-content { 
+            flex: 1; 
+            overflow-y: auto; 
+            max-height: calc(80vh - 120px);
+            padding-right: 5px;
+        }
+        .settings-content::-webkit-scrollbar { width: 6px; }
+        .settings-content::-webkit-scrollbar-track { background: #2d2d30; }
+        .settings-content::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        
+        .setting-group { margin-bottom: 20px; }
+        .setting-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+        .setting-label { 
+            flex: 1; 
+            margin-right: 20px; 
+            font-size: 14px;
+        }
+        .setting-control { 
+            flex-shrink: 0; 
+            width: 120px; 
+            text-align: right;
+        }
+        .setting-control select, 
+        .setting-control input[type="range"] { 
+            width: 100%; 
+            background: #3c3c3c; 
+            border: 1px solid #555; 
+            color: white; 
+            border-radius: 4px;
+            padding: 5px;
+        }
+        .setting-control input[type="checkbox"] { 
+            width: 18px; 
+            height: 18px; 
+            accent-color: #0e639c;
+        }
+        .slider-value { 
+            display: inline-block; 
+            margin-left: 10px; 
+            min-width: 40px; 
+            text-align: center;
+        }
+        
+        .modal-actions { text-align: right; margin-top: 20px; padding-top: 20px; border-top: 1px solid #333; }
+        .modal-actions button { margin-left: 10px; padding: 8px 16px; cursor: pointer; border-radius: 4px; border: none; }
+        .no-select { user-select: none; -webkit-user-select: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                Files
+                <button onclick="showCreateModal()">+</button>
+            </div>
+            <div class="file-list" id="fileList"></div>
+            <div class="sidebar-footer">
+                <button class="settings-btn" onclick="showSettingsModal()">⚙️</button>
+            </div>
+        </div>
+
+        <div class="resizer" id="resizer"></div>
+
+        <div class="main">
+            <div id="editor-container"></div>
+        </div>
+
+        <div id="overlay">请选择或创建一个文件</div>
+    </div>
+
+    <div id="createModal" class="modal">
+        <div class="modal-content">
+            <h3>新建文件</h3>
+            <input type="text" id="fileNameInput" placeholder="例如: main.js 或 index.html" autofocus>
+            <div class="modal-actions">
+                <button onclick="closeModal('createModal')" style="background:#666;color:white;">取消</button>
+                <button onclick="createFile()" style="background:#0e639c;color:white;">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <h3>编辑器设置</h3>
+            
+            <div class="settings-content">
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="fontSizeSlider">字体大小</label>
+                        <div class="setting-control">
+                            <input type="range" id="fontSizeSlider" min="10" max="24" step="1">
+                            <span class="slider-value" id="fontSizeValue">16px</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="wordWrapCheckbox">自动换行</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="wordWrapCheckbox">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="autoSaveCheckbox">自动保存</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="autoSaveCheckbox">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="autoCloseBrackets">自动补全括号</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="autoCloseBrackets">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="showLineNumbers">显示行号</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="showLineNumbers">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <div class="setting-row">
+                        <label class="setting-label" for="highlightCurrentLine">高亮当前行</label>
+                        <div class="setting-control">
+                            <input type="checkbox" id="highlightCurrentLine">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button onclick="closeModal('settingsModal')" style="background:#666;color:white;">关闭</button>
+                <button onclick="applySettings()" style="background:#0e639c;color:white;">应用</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+    
+    <script>
+        let editor;
+        let files = JSON.parse(localStorage.getItem('tourtides_files')) || {};
+        let currentFile = null;
+        const overlay = document.getElementById('overlay');
+        const sidebar = document.getElementById('sidebar');
+        
+        // 加载设置
+        let settings = JSON.parse(localStorage.getItem('tourtides_settings')) || {
+            fontSize: 16,
+            wordWrap: false,
+            autoSave: true,
+            autoCloseBrackets: true,
+            showLineNumbers: true,
+            highlightCurrentLine: true
+        };
+
+        // 初始化编辑器
+        require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' }});
+        require(['vs/editor/editor.main'], () => {
+            editor = monaco.editor.create(document.getElementById('editor-container'), {
+                value: '',
+                language: 'plaintext',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                minimap: { enabled: false },
+                fontSize: settings.fontSize,
+                tabSize: 2,
+                autoIndent: true,
+                wordWrap: settings.wordWrap ? 'on' : 'off',
+                formatOnType: true,
+                lineNumbers: settings.showLineNumbers ? 'on' : 'off',
+                renderLineHighlight: settings.highlightCurrentLine ? 'all' : 'none'
+            });
+
+            // 加载设置到UI
+            loadSettingsToUI();
+
+            // 自动补全
+            if (settings.autoCloseBrackets) {
+                editor.onDidType((text) => {
+                    const matching = { '(': ')', '{': '}', '[': ']', '"': '"', "'": "'" };
+                    if (matching[text]) {
+                        editor.trigger('keyboard', 'type', { text: matching[text] });
+                        editor.trigger('keyboard', 'cursorLeft');
+                    }
+                });
+            }
+
+            // 自动保存
+            if (settings.autoSave) {
+                editor.onDidChangeModelContent(() => {
+                    if (currentFile) {
+                        setTimeout(() => {
+                            files[currentFile] = editor.getValue();
+                            localStorage.setItem('tourtides_files', JSON.stringify(files));
+                        }, 1000);
+                    }
+                });
+            }
+
+            renderFiles();
+            updateOverlay();
+            updateOverlayPosition();
+        });
+
+        // 根据文件名获取语言
+        function getLanguageFromFileName(name) {
+            if (name.endsWith('.js')) return 'javascript';
+            if (name.endsWith('.html') || name.endsWith('.htm')) return 'html';
+            if (name.endsWith('.css')) return 'css';
+            if (name.endsWith('.json')) return 'json';
+            if (name.endsWith('.md')) return 'markdown';
+            return 'plaintext';
+        }
+
+        // 渲染文件列表
+        function renderFiles() {
+            const listEl = document.getElementById('fileList');
+            listEl.innerHTML = '';
+            const names = Object.keys(files);
+            if (names.length === 0) {
+                listEl.innerHTML = '<div class="empty-tip">暂无文件<br>点击 + 创建</div>';
+                return;
+            }
+            names.forEach(name => {
+                const div = document.createElement('div');
+                div.className = 'file-item' + (name === currentFile ? ' active' : '');
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'file-name';
+                nameSpan.textContent = name;
+                nameSpan.onclick = () => selectFile(name);
+
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'file-actions';
+                
+                const saveBtn = document.createElement('button');
+                saveBtn.textContent = 'Save';
+                saveBtn.className = 'save-btn';
+                saveBtn.onclick = (e) => { e.stopPropagation(); saveFile(name); };
+                
+                const dlBtn = document.createElement('button');
+                dlBtn.textContent = 'DL';
+                dlBtn.onclick = (e) => { e.stopPropagation(); downloadFile(name); };
+
+                actionsDiv.appendChild(saveBtn);
+                actionsDiv.appendChild(dlBtn);
+                
+                div.appendChild(nameSpan);
+                div.appendChild(actionsDiv);
+                listEl.appendChild(div);
+            });
+        }
+
+        // 选择文件
+        function selectFile(name) {
+            currentFile = name;
+            editor.setValue(files[name]);
+            
+            // 切换语言模式
+            const language = getLanguageFromFileName(name);
+            const model = editor.getModel();
+            if (model) {
+                monaco.editor.setModelLanguage(model, language);
+            }
+
+            updateOverlay();
+            renderFiles();
+        }
+
+        // 保存文件
+        function saveFile(name) {
+            if (!name) return;
+            files[name] = editor.getValue();
+            localStorage.setItem('tourtides_files', JSON.stringify(files));
+            overlay.textContent = `"${name}" 已保存`;
+            overlay.style.display = 'flex';
+            setTimeout(() => { overlay.style.display = 'none'; updateOverlay(); }, 800);
+        }
+
+        // 下载文件
+        function downloadFile(name) {
+            const content = files[name] || '';
+            const blob = new Blob([content], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = name;
+            a.click();
+        }
+
+        // 遮罩层
+        function updateOverlay() {
+            overlay.style.display = currentFile ? 'none' : 'flex';
+        }
+
+        // 更新遮罩层位置
+        function updateOverlayPosition() {
+            const sidebarWidth = sidebar.offsetWidth;
+            overlay.style.left = sidebarWidth + 'px';
+        }
+
+        // 新建文件
+        function showCreateModal() { 
+            document.getElementById('createModal').style.display = 'flex'; 
+        }
+        
+        // 关闭弹窗
+        function closeModal(modalId) { 
+            document.getElementById(modalId).style.display = 'none'; 
+        }
+        
+        function createFile() {
+            const name = document.getElementById('fileNameInput').value.trim();
+            if (!name) return alert('文件名不能为空');
+            if (files[name]) return alert('文件已存在');
+            
+            // 根据后缀给个默认内容
+            let defaultContent = '// Hello TourTi\n';
+            if (name.endsWith('.html')) {
+                defaultContent = '<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n<title>Document</title>\n</head>\n<body>\n\n</body>\n</html>';
+            }
+            
+            files[name] = defaultContent;
+            localStorage.setItem('tourtides_files', JSON.stringify(files));
+            closeModal('createModal');
+            selectFile(name);
+            renderFiles();
+        }
+
+        // 设置相关功能
+        function showSettingsModal() {
+            loadSettingsToUI();
+            document.getElementById('settingsModal').style.display = 'flex';
+        }
+        
+        function loadSettingsToUI() {
+            // 设置字体大小滑块
+            const fontSizeSlider = document.getElementById('fontSizeSlider');
+            const fontSizeValue = document.getElementById('fontSizeValue');
+            fontSizeSlider.value = settings.fontSize;
+            fontSizeValue.textContent = settings.fontSize + 'px';
+            
+            // 更新字体大小显示
+            fontSizeSlider.addEventListener('input', function() {
+                fontSizeValue.textContent = this.value + 'px';
+            });
+            
+            // 设置复选框
+            document.getElementById('wordWrapCheckbox').checked = settings.wordWrap;
+            document.getElementById('autoSaveCheckbox').checked = settings.autoSave;
+            document.getElementById('autoCloseBrackets').checked = settings.autoCloseBrackets;
+            document.getElementById('showLineNumbers').checked = settings.showLineNumbers;
+            document.getElementById('highlightCurrentLine').checked = settings.highlightCurrentLine;
+        }
+        
+        function applySettings() {
+            // 保存设置
+            settings.fontSize = parseInt(document.getElementById('fontSizeSlider').value);
+            settings.wordWrap = document.getElementById('wordWrapCheckbox').checked;
+            settings.autoSave = document.getElementById('autoSaveCheckbox').checked;
+            settings.autoCloseBrackets = document.getElementById('autoCloseBrackets').checked;
+            settings.showLineNumbers = document.getElementById('showLineNumbers').checked;
+            settings.highlightCurrentLine = document.getElementById('highlightCurrentLine').checked;
+            
+            localStorage.setItem('tourtides_settings', JSON.stringify(settings));
+            
+            // 应用设置
+            const updateOptions = {
+                fontSize: settings.fontSize,
+                wordWrap: settings.wordWrap ? 'on' : 'off',
+                lineNumbers: settings.showLineNumbers ? 'on' : 'off',
+                renderLineHighlight: settings.highlightCurrentLine ? 'all' : 'none'
+            };
+            editor.updateOptions(updateOptions);
+            
+            // 强制重新布局
+            editor.layout();
+            
+            // 应用自动补全括号
+            editor.onDidType = null; // 清空之前的监听
+            if (settings.autoCloseBrackets) {
+                editor.onDidType((text) => {
+                    const matching = { '(': ')', '{': '}', '[': ']', '"': '"', "'": "'" };
+                    if (matching[text]) {
+                        editor.trigger('keyboard', 'type', { text: matching[text] });
+                        editor.trigger('keyboard', 'cursorLeft');
+                    }
+                });
+            }
+            
+            // 应用自动保存
+            editor.onDidChangeModelContent = null; // 清空之前的监听
+            if (settings.autoSave && currentFile) {
+                editor.onDidChangeModelContent(() => {
+                    if (currentFile) {
+                        setTimeout(() => {
+                            files[currentFile] = editor.getValue();
+                            localStorage.setItem('tourtides_files', JSON.stringify(files));
+                        }, 1000);
+                    }
+                });
+            }
+            
+            // 关闭设置弹窗
+            closeModal('settingsModal');
+        }
+
+        // 拖拽逻辑
+        const resizer = document.getElementById('resizer');
+        let isDragging = false;
+
+        resizer.addEventListener('mousedown', () => { 
+            isDragging = true; 
+            document.body.classList.add('no-select'); 
+        });
+        
+        resizer.addEventListener('touchstart', (e) => { 
+            isDragging = true; 
+            document.body.classList.add('no-select'); 
+            e.preventDefault(); 
+        }, { passive: false });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            let newWidth = e.clientX;
+            if (newWidth >= 150 && newWidth <= 500) {
+                sidebar.style.width = newWidth + 'px';
+                updateOverlayPosition();
+            }
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            let newWidth = e.touches[0].clientX;
+            if (newWidth >= 150 && newWidth <= 500) {
+                sidebar.style.width = newWidth + 'px';
+                updateOverlayPosition();
+            }
+        }, { passive: false });
+
+        document.addEventListener('mouseup', () => { 
+            isDragging = false; 
+            document.body.classList.remove('no-select'); 
+        });
+        
+        document.addEventListener('touchend', () => { 
+            isDragging = false; 
+            document.body.classList.remove('no-select'); 
+        });
+    </script>
+</body>
+</html>
