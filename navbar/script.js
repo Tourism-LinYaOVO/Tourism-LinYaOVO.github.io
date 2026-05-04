@@ -35,10 +35,10 @@ function createMenuItem(item) {
   if (item.link) {
     const el = document.createElement("a");
     el.className = "menu-item";
-    el.href = item.link; // 🔧 直接用原始link，浏览器自动处理相对路径
+    el.href = item.link;
     el.textContent = item.label;
-
-    // 只检查同域链接是否为当前路径
+    
+    // 🔧 关键修复：检查是否为当前路径（包括子菜单）
     if (!isExternalLink && isCurrentPath(item.link)) {
       el.classList.add("current-page");
       el.href = "javascript:void(0)";
@@ -49,7 +49,7 @@ function createMenuItem(item) {
         e.stopPropagation();
       });
     }
-
+    
     // 处理子菜单（如果有）
     if (item.children) {
       const arrow = document.createElement("span");
@@ -60,11 +60,11 @@ function createMenuItem(item) {
       const dropdown = document.createElement("div");
       dropdown.className = "dropdown";
       item.children.forEach(child => {
-        dropdown.appendChild(createMenuItem(child));
+        dropdown.appendChild(createMenuItem(child)); // 递归处理子菜单
       });
       el.appendChild(dropdown);
     }
-
+    
     return el;
   } else {
     // 无link的纯容器项
@@ -81,11 +81,11 @@ function createMenuItem(item) {
       const dropdown = document.createElement("div");
       dropdown.className = "dropdown";
       item.children.forEach(child => {
-        dropdown.appendChild(createMenuItem(child));
+        dropdown.appendChild(createMenuItem(child)); // 递归处理子菜单
       });
       el.appendChild(dropdown);
     }
-
+    
     return el;
   }
 }
@@ -165,7 +165,7 @@ function setupMobileMenu() {
 }
 
 function handleMobileClick(e) {
-  // 如果是当前页面的链接，直接阻止
+  // 🔧 关键：如果是当前页面的链接，直接阻止
   if (this.tagName === "A" && this.classList.contains("current-page")) {
     e.preventDefault();
     e.stopPropagation();
