@@ -1,7 +1,7 @@
 // 获取当前路径信息
 const currentPath = window.location.pathname;
 const currentOrigin = window.location.origin;
-// 🔧 修复：正确获取当前目录（避免重复拼接）
+// 🔧 修复：正确获取当前目录
 const currentDir = currentPath.substring(0, currentPath.lastIndexOf('/') + 1) || '/';
 
 fetch("/navbar/navbar.json")
@@ -14,20 +14,20 @@ function renderNavbar(data) {
   document.getElementById("logo-text").innerText = data.logo.text;
 
   const menu = document.getElementById("menu");
-  menu.innerHTML = ""; // 清空旧内容
+  menu.innerHTML = "";
   data.menu.forEach(item => {
     menu.appendChild(createMenuItem(item));
   });
 
   initBehavior();
-  disableCurrentPathLinks(); // 确保调用
+  disableCurrentPathLinks();
 }
 
 function createMenuItem(item) {
   // 🔧 修复：检查是否为外部链接
   const isExternalLink = item.link && (
-    item.link.startsWith('http://') || 
-    item.link.startsWith('https://') || 
+    item.link.startsWith('http://') ||
+    item.link.startsWith('https://') ||
     item.link.startsWith('//')
   );
 
@@ -37,19 +37,18 @@ function createMenuItem(item) {
     el.className = "menu-item";
     el.href = item.link;
     el.textContent = item.label;
-    
+
     // 🔧 关键修复：对所有链接项应用路径检测
     if (!isExternalLink && isCurrentPath(item.link)) {
       el.classList.add("current-page");
       el.href = "javascript:void(0)";
       el.setAttribute("aria-disabled", "true");
-      // 强制阻止跳转
       el.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
       });
     }
-    
+
     // 处理子菜单（如果有）
     if (item.children) {
       const arrow = document.createElement("span");
@@ -59,16 +58,13 @@ function createMenuItem(item) {
 
       const dropdown = document.createElement("div");
       dropdown.className = "dropdown";
-      
-      // 🔧 关键修复：递归创建子菜单项
       item.children.forEach(child => {
-        const childItem = createMenuItem(child);
+        const childItem = createMenuItem(child); // 🔧 递归创建子菜单项
         dropdown.appendChild(childItem);
       });
-      
       el.appendChild(dropdown);
     }
-    
+
     return el;
   } else {
     // 无link的纯容器项
@@ -84,44 +80,47 @@ function createMenuItem(item) {
 
       const dropdown = document.createElement("div");
       dropdown.className = "dropdown";
-      
-      // 🔧 关键修复：递归创建子菜单项
       item.children.forEach(child => {
-        const childItem = createMenuItem(child);
+        const childItem = createMenuItem(child); // 🔧 递归创建子菜单项
         dropdown.appendChild(childItem);
       });
-      
       el.appendChild(dropdown);
     }
-    
+
     return el;
   }
 }
 
-// 🔧 修复：正确处理相对路径，避免重复拼接
+// 🔧 终极修复：正确处理所有类型的路径
 function isCurrentPath(linkPath) {
   try {
     // 1. 外部链接直接排除
-    if (linkPath.startsWith('http://') || 
-        linkPath.startsWith('https://') || 
+    if (linkPath.startsWith('http://') || 
+        linkPath.startsWith('https://') || 
         linkPath.startsWith('//')) {
       const linkUrl = new URL(linkPath);
       if (linkUrl.origin !== currentOrigin) return false;
       linkPath = linkUrl.pathname;
-    } 
+    } 
     // 2. 绝对路径（以/开头）直接使用
     else if (linkPath.startsWith('/')) {
       // 无需处理
-    } 
+    } 
     // 3. 相对路径：基于当前目录解析
     else {
-      // 🔧 关键修复：使用当前目录作为基URL，而不是当前页面URL
+      // 🔧 关键修复：使用当前目录作为基URL
       linkPath = new URL(linkPath, currentOrigin + currentDir).pathname;
     }
 
     // 4. 标准化路径（去除尾部斜杠）
-    const normalizePath = (path) => path.replace(/\/$/, '') || '/';
-    return normalizePath(linkPath) === normalizePath(currentPath);
+    const normalize = (path) => path.replace(/\/$/, '') || '/';
+    const normalizedLinkPath = normalize(linkPath);
+    const normalizedCurrentPath = normalize(currentPath);
+
+    // 🔧 调试：打印比较信息
+    console.log('Comparing:', normalizedLinkPath, 'with', normalizedCurrentPath);
+
+    return normalizedLinkPath === normalizedCurrentPath;
   } catch (e) {
     console.warn("Invalid link path:", linkPath);
     return false;
@@ -173,7 +172,7 @@ function setupMobileMenu() {
 }
 
 function handleMobileClick(e) {
-  // 🔧 关键：如果是当前页面的链接，直接阻止
+  // 如果是当前页面的链接，直接阻止
   if (this.tagName === "A" && this.classList.contains("current-page")) {
     e.preventDefault();
     e.stopPropagation();
