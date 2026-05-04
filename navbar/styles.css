@@ -206,3 +206,26 @@ body {
     display: none !important;
   }
 }
+/* 在原有 styles.css 末尾添加 */
+
+/* ==========================================
+   当前页面菜单项样式
+   ========================================== */
+.menu-item.current-page {
+  color: #999 !important;
+  cursor: default !important;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.menu-item.current-page:hover {
+  background: transparent !important;
+  color: #999 !important;
+}
+
+@media (min-width: 769px) {
+  .menu-item.current-page:hover {
+    color: #999 !important;
+  }
+}
+
