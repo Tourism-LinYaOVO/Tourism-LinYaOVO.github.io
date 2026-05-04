@@ -1,5 +1,6 @@
-// 获取当前路径（标准化处理）
+// 获取当前路径
 const currentPath = window.location.pathname;
+const currentOrigin = window.location.origin;
 
 fetch("/navbar/navbar.json")
   .then(res => res.json())
@@ -21,15 +22,22 @@ function renderNavbar(data) {
 }
 
 function createMenuItem(item) {
-  // 🔴 关键修复：所有带 link 的项都生成 <a>，无论是否有子菜单
-  if (item.link) {
+  // 🔴 关键修复：检查是否为外部链接
+  const isExternalLink = item.link && (
+    item.link.startsWith('http://') || 
+    item.link.startsWith('https://') || 
+    item.link.startsWith('//')
+  );
+
+  // 如果是链接且没有子项，生成 <a>
+  if (item.link && !item.children) {
     const el = document.createElement("a");
     el.className = "menu-item";
     el.href = item.link;
     el.textContent = item.label;
-
-    // 检查是否为当前路径
-    if (isCurrentPath(item.link)) {
+    
+    // 🔴 只检查同域链接是否为当前路径
+    if (!isExternalLink && isCurrentPath(item.link)) {
       el.classList.add("current-page");
       el.href = "javascript:void(0)";
       el.setAttribute("aria-disabled", "true");
@@ -39,58 +47,58 @@ function createMenuItem(item) {
         e.stopPropagation();
       });
     }
-
-    // 处理子菜单（如果有）
-    if (item.children) {
-      const arrow = document.createElement("span");
-      arrow.className = "arrow";
-      arrow.innerHTML = "▾";
-      el.appendChild(arrow);
-
-      const dropdown = document.createElement("div");
-      dropdown.className = "dropdown";
-      item.children.forEach(child => {
-        dropdown.appendChild(createMenuItem(child));
-      });
-      el.appendChild(dropdown);
-    }
-
-    return el;
-  } else {
-    // 无 link 的纯容器项
-    const el = document.createElement("div");
-    el.className = "menu-item";
-    el.innerHTML = item.label;
-
-    if (item.children) {
-      const arrow = document.createElement("span");
-      arrow.className = "arrow";
-      arrow.innerHTML = "▾";
-      el.appendChild(arrow);
-
-      const dropdown = document.createElement("div");
-      dropdown.className = "dropdown";
-      item.children.forEach(child => {
-        dropdown.appendChild(createMenuItem(child));
-      });
-      el.appendChild(dropdown);
-    }
-
+    
     return el;
   }
+
+  // 否则生成 <div>（作为容器）
+  const el = document.createElement("div");
+  el.className = "menu-item";
+  el.innerHTML = item.label;
+
+  if (item.children) {
+    const arrow = document.createElement("span");
+    arrow.className = "arrow";
+    arrow.innerHTML = "▾";
+    el.appendChild(arrow);
+
+    const dropdown = document.createElement("div");
+    dropdown.className = "dropdown";
+
+    item.children.forEach(child => {
+      dropdown.appendChild(createMenuItem(child));
+    });
+    el.appendChild(dropdown);
+  }
+
+  return el;
 }
 
-// 🔴 修复路径匹配逻辑（支持相对/绝对路径）
+// 🔴 修复：正确处理外部链接
 function isCurrentPath(linkPath) {
   try {
-    // 解析链接路径（处理相对路径）
-    const linkUrl = new URL(linkPath, window.location.origin);
-    const linkPathname = linkUrl.pathname;
-    const currentPathname = window.location.pathname;
+    // 检查是否为外部链接
+    if (linkPath.startsWith('http://') || 
+        linkPath.startsWith('https://') || 
+        linkPath.startsWith('//')) {
+      // 如果是完整URL，解析它
+      const linkUrl = new URL(linkPath);
+      // 如果域名不同，肯定不是当前页面
+      if (linkUrl.origin !== currentOrigin) {
+        return false;
+      }
+      // 同域则继续比较路径
+      linkPath = linkUrl.pathname;
+    } else if (linkPath.startsWith('/')) {
+      // 绝对路径，直接使用
+    } else {
+      // 相对路径，转换为绝对路径
+      linkPath = new URL(linkPath, currentOrigin).pathname;
+    }
 
-    // 标准化：去掉尾部斜杠，根路径特殊处理
-    const normalize = (path) => path.replace(/\/$/, "") || "/";
-    return normalize(linkPathname) === normalize(currentPathname);
+    // 标准化路径（去除尾部斜杠）
+    const normalizePath = (path) => path.replace(/\/$/, '') || '/';
+    return normalizePath(linkPath) === normalizePath(currentPath);
   } catch (e) {
     console.warn("Invalid link path:", linkPath);
     return false;
@@ -101,13 +109,18 @@ function initBehavior() {
   const hamburger = document.getElementById("hamburger");
   const menu = document.getElementById("menu");
 
+  // 汉堡菜单
   hamburger.addEventListener("click", e => {
     e.stopPropagation();
     menu.classList.toggle("open");
   });
 
-  if (window.innerWidth <= 768) setupMobileMenu();
+  // 移动端逻辑
+  if (window.innerWidth <= 768) {
+    setupMobileMenu();
+  }
 
+  // 窗口大小改变时重新初始化
   window.addEventListener("resize", () => {
     if (window.innerWidth <= 768) {
       setupMobileMenu();
@@ -116,6 +129,7 @@ function initBehavior() {
     }
   });
 
+  // 点击页面其他地方关闭菜单
   document.addEventListener("click", e => {
     if (window.innerWidth <= 768 && !menu.contains(e.target)) {
       menu.classList.remove("open");
@@ -146,18 +160,23 @@ function handleMobileClick(e) {
   if (this.tagName === "A") return; // 普通链接直接跳转
 
   e.stopPropagation();
+
   const dropdown = this.querySelector(":scope > .dropdown");
   if (!dropdown) return;
 
-  // 关闭同级菜单
-  Array.from(this.parentElement.children).forEach(sibling => {
+  // 关闭同级的其他菜单
+  const siblings = Array.from(this.parentElement.children);
+  siblings.forEach(sibling => {
     if (sibling !== this) {
       sibling.classList.remove("active");
       const siblingDropdown = sibling.querySelector(":scope > .dropdown");
-      if (siblingDropdown) siblingDropdown.style.display = "none";
+      if (siblingDropdown) {
+        siblingDropdown.style.display = "none";
+      }
     }
   });
 
+  // 切换当前菜单
   this.classList.toggle("active");
   dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
 }
