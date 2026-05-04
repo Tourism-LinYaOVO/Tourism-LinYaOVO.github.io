@@ -1,7 +1,8 @@
 // 获取当前路径信息
 const currentPath = window.location.pathname;
 const currentOrigin = window.location.origin;
-const currentDir = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+// 🔧 修复：正确获取当前目录（避免重复拼接）
+const currentDir = currentPath.substring(0, currentPath.lastIndexOf('/') + 1) || '/';
 
 fetch("/navbar/navbar.json")
   .then(res => res.json())
@@ -23,20 +24,20 @@ function renderNavbar(data) {
 }
 
 function createMenuItem(item) {
-  // 检查是否为外部链接
+  // 🔧 修复：检查是否为外部链接
   const isExternalLink = item.link && (
     item.link.startsWith('http://') || 
     item.link.startsWith('https://') || 
     item.link.startsWith('//')
   );
 
-  // 如果是链接且没有子项，生成 <a>
-  if (item.link && !item.children) {
+  // 如果是链接（无论是否有子菜单）
+  if (item.link) {
     const el = document.createElement("a");
     el.className = "menu-item";
-    el.href = item.link;
+    el.href = item.link; // 🔧 直接用原始link，浏览器自动处理相对路径
     el.textContent = item.label;
-    
+
     // 只检查同域链接是否为当前路径
     if (!isExternalLink && isCurrentPath(item.link)) {
       el.classList.add("current-page");
@@ -48,56 +49,69 @@ function createMenuItem(item) {
         e.stopPropagation();
       });
     }
-    
+
+    // 处理子菜单（如果有）
+    if (item.children) {
+      const arrow = document.createElement("span");
+      arrow.className = "arrow";
+      arrow.innerHTML = "▾";
+      el.appendChild(arrow);
+
+      const dropdown = document.createElement("div");
+      dropdown.className = "dropdown";
+      item.children.forEach(child => {
+        dropdown.appendChild(createMenuItem(child));
+      });
+      el.appendChild(dropdown);
+    }
+
+    return el;
+  } else {
+    // 无link的纯容器项
+    const el = document.createElement("div");
+    el.className = "menu-item";
+    el.innerHTML = item.label;
+
+    if (item.children) {
+      const arrow = document.createElement("span");
+      arrow.className = "arrow";
+      arrow.innerHTML = "▾";
+      el.appendChild(arrow);
+
+      const dropdown = document.createElement("div");
+      dropdown.className = "dropdown";
+      item.children.forEach(child => {
+        dropdown.appendChild(createMenuItem(child));
+      });
+      el.appendChild(dropdown);
+    }
+
     return el;
   }
-
-  // 否则生成 <div>（作为容器）
-  const el = document.createElement("div");
-  el.className = "menu-item";
-  el.innerHTML = item.label;
-
-  if (item.children) {
-    const arrow = document.createElement("span");
-    arrow.className = "arrow";
-    arrow.innerHTML = "▾";
-    el.appendChild(arrow);
-
-    const dropdown = document.createElement("div");
-    dropdown.className = "dropdown";
-
-    item.children.forEach(child => {
-      dropdown.appendChild(createMenuItem(child));
-    });
-    el.appendChild(dropdown);
-  }
-
-  return el;
 }
 
-// 🔧 修复：正确处理相对路径
+// 🔧 修复：正确处理相对路径，避免重复拼接
 function isCurrentPath(linkPath) {
   try {
-    // 检查是否为外部链接
+    // 1. 外部链接直接排除
     if (linkPath.startsWith('http://') || 
         linkPath.startsWith('https://') || 
         linkPath.startsWith('//')) {
       const linkUrl = new URL(linkPath);
-      // 如果域名不同，肯定不是当前页面
-      if (linkUrl.origin !== currentOrigin) {
-        return false;
-      }
-      // 同域则继续比较路径
+      if (linkUrl.origin !== currentOrigin) return false;
       linkPath = linkUrl.pathname;
-    } else if (linkPath.startsWith('/')) {
-      // 绝对路径，直接使用
-    } else {
-      // 🔧 关键修复：正确处理相对路径
-      // 使用当前目录作为基准，而不是当前页面URL
+    } 
+    // 2. 绝对路径（以/开头）直接使用
+    else if (linkPath.startsWith('/')) {
+      // 无需处理
+    } 
+    // 3. 相对路径：基于当前目录解析
+    else {
+      // 🔧 关键修复：使用当前目录作为基URL，而不是当前页面URL
       linkPath = new URL(linkPath, currentOrigin + currentDir).pathname;
     }
 
-    // 标准化路径（去除尾部斜杠）
+    // 4. 标准化路径（去除尾部斜杠）
     const normalizePath = (path) => path.replace(/\/$/, '') || '/';
     return normalizePath(linkPath) === normalizePath(currentPath);
   } catch (e) {
