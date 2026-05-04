@@ -1,3 +1,6 @@
+// 获取当前路径
+const currentPath = window.location.pathname;
+
 fetch("/navbar/navbar.json")
   .then(res => res.json())
   .then(renderNavbar)
@@ -13,6 +16,9 @@ function renderNavbar(data) {
   });
 
   initBehavior();
+  
+  // 🔴 新增：禁用当前路径的菜单项
+  disableCurrentPathLinks();
 }
 
 function createMenuItem(item) {
@@ -22,6 +28,14 @@ function createMenuItem(item) {
     el.className = "menu-item";
     el.href = item.link;
     el.textContent = item.label;
+    
+    // 🔴 新增：检查是否为当前路径
+    if (isCurrentPath(item.link)) {
+      el.classList.add("current-page");
+      el.href = "javascript:void(0)"; // 禁用链接
+      el.setAttribute("aria-disabled", "true");
+    }
+    
     return el;
   }
 
@@ -135,4 +149,42 @@ function closeAllDropdowns() {
       d.style.display = "none";
     });
   });
+}
+
+// 🔴 新增：检查是否为当前路径
+function isCurrentPath(linkPath) {
+  // 获取链接的路径部分
+  const linkUrl = new URL(linkPath, window.location.origin);
+  const linkPathname = linkUrl.pathname;
+  
+  // 标准化路径（去除尾部斜杠）
+  const normalizePath = (path) => path.replace(/\/$/, '') || '/';
+  
+  return normalizePath(linkPathname) === normalizePath(currentPath);
+}
+
+// 🔴 新增：禁用当前路径的所有链接
+function disableCurrentPathLinks() {
+  // 为当前页面的菜单项添加特殊样式
+  const style = document.createElement('style');
+  style.textContent = `
+    .menu-item.current-page {
+      color: #999 !important;
+      cursor: default !important;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+    
+    .menu-item.current-page:hover {
+      background: transparent !important;
+      color: #999 !important;
+    }
+    
+    @media (min-width: 769px) {
+      .menu-item.current-page:hover {
+        color: #999 !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
 }
