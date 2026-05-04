@@ -1,6 +1,7 @@
-// 获取当前路径
+// 获取当前路径信息
 const currentPath = window.location.pathname;
 const currentOrigin = window.location.origin;
+const currentDir = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
 
 fetch("/navbar/navbar.json")
   .then(res => res.json())
@@ -22,7 +23,7 @@ function renderNavbar(data) {
 }
 
 function createMenuItem(item) {
-  // 🔴 关键修复：检查是否为外部链接
+  // 检查是否为外部链接
   const isExternalLink = item.link && (
     item.link.startsWith('http://') || 
     item.link.startsWith('https://') || 
@@ -36,7 +37,7 @@ function createMenuItem(item) {
     el.href = item.link;
     el.textContent = item.label;
     
-    // 🔴 只检查同域链接是否为当前路径
+    // 只检查同域链接是否为当前路径
     if (!isExternalLink && isCurrentPath(item.link)) {
       el.classList.add("current-page");
       el.href = "javascript:void(0)";
@@ -74,14 +75,13 @@ function createMenuItem(item) {
   return el;
 }
 
-// 🔴 修复：正确处理外部链接
+// 🔧 修复：正确处理相对路径
 function isCurrentPath(linkPath) {
   try {
     // 检查是否为外部链接
     if (linkPath.startsWith('http://') || 
         linkPath.startsWith('https://') || 
         linkPath.startsWith('//')) {
-      // 如果是完整URL，解析它
       const linkUrl = new URL(linkPath);
       // 如果域名不同，肯定不是当前页面
       if (linkUrl.origin !== currentOrigin) {
@@ -92,8 +92,9 @@ function isCurrentPath(linkPath) {
     } else if (linkPath.startsWith('/')) {
       // 绝对路径，直接使用
     } else {
-      // 相对路径，转换为绝对路径
-      linkPath = new URL(linkPath, currentOrigin).pathname;
+      // 🔧 关键修复：正确处理相对路径
+      // 使用当前目录作为基准，而不是当前页面URL
+      linkPath = new URL(linkPath, currentOrigin + currentDir).pathname;
     }
 
     // 标准化路径（去除尾部斜杠）
@@ -150,7 +151,7 @@ function setupMobileMenu() {
 }
 
 function handleMobileClick(e) {
-  // 🔴 关键：如果是当前页面的链接，直接阻止
+  // 如果是当前页面的链接，直接阻止
   if (this.tagName === "A" && this.classList.contains("current-page")) {
     e.preventDefault();
     e.stopPropagation();
@@ -199,7 +200,7 @@ function closeAllDropdowns() {
   });
 }
 
-// 🔴 强制样式注入（防止被覆盖）
+// 强制样式注入（防止被覆盖）
 function disableCurrentPathLinks() {
   const style = document.createElement("style");
   style.textContent = `
