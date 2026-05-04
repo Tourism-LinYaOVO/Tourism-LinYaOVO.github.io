@@ -38,7 +38,7 @@ function createMenuItem(item) {
     el.href = item.link;
     el.textContent = item.label;
     
-    // 🔧 关键修复：检查是否为当前路径（包括子菜单）
+    // 🔧 关键修复：对所有链接项应用路径检测
     if (!isExternalLink && isCurrentPath(item.link)) {
       el.classList.add("current-page");
       el.href = "javascript:void(0)";
@@ -59,9 +59,13 @@ function createMenuItem(item) {
 
       const dropdown = document.createElement("div");
       dropdown.className = "dropdown";
+      
+      // 🔧 关键修复：递归创建子菜单项
       item.children.forEach(child => {
-        dropdown.appendChild(createMenuItem(child)); // 递归处理子菜单
+        const childItem = createMenuItem(child);
+        dropdown.appendChild(childItem);
       });
+      
       el.appendChild(dropdown);
     }
     
@@ -80,9 +84,13 @@ function createMenuItem(item) {
 
       const dropdown = document.createElement("div");
       dropdown.className = "dropdown";
+      
+      // 🔧 关键修复：递归创建子菜单项
       item.children.forEach(child => {
-        dropdown.appendChild(createMenuItem(child)); // 递归处理子菜单
+        const childItem = createMenuItem(child);
+        dropdown.appendChild(childItem);
       });
+      
       el.appendChild(dropdown);
     }
     
