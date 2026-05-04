@@ -2,257 +2,699 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>TourTi Editor</title>
-<style>
-    <link rel="stylesheet" href="/navbar/styles.css">
-:root{--sat:env(safe-area-inset-top);--sar:env(safe-area-inset-right);--sab:env(safe-area-inset-bottom);--sal:env(safe-area-inset-left)}
-*{box-sizing:border-box;margin:0;padding:0}
-body{height:100dvh;height:-webkit-fill-available;overflow:hidden;background:#1e1e1e;color:#d4d4d4;font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:var(--sat) var(--sar) var(--sab) var(--sal)}
 
-/* 关键修改：适配顶部 60px Navbar */
-.container{
-    display:flex;
-    position:relative;
-    top:60px; /* Navbar 高度 */
-    height:calc(100vh - 60px);
-    height:calc(100dvh - 60px);
-    height:calc(-webkit-fill-available - 60px);
-    min-height:calc(-webkit-fill-available - 60px);
+<!-- 🔴 引入外部 Navbar CSS -->
+<link rel="stylesheet" href="/navbar/styles.css" />
+
+<!-- 编辑器样式 -->
+<style>
+/* ==========================================
+   编辑器样式（从之前版本精简）
+   ========================================== */
+body {
+  padding-top: 60px; /* 为 Navbar 预留空间 */
+  height: 100vh;
+  height: 100dvh;
+  height: -webkit-fill-available;
+  overflow: hidden;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  margin: 0;
+  padding: 60px env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  box-sizing: border-box;
 }
 
-.sidebar{width:320px;min-width:200px;background:#252526;border-right:1px solid #333;display:flex;flex-direction:column;flex-shrink:0;z-index:5}
-.sidebar-header{padding:12px 15px;font-weight:bold;border-bottom:1px solid #333;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
-.sidebar-header button{background:#0e639c;border:none;color:white;width:28px;height:28px;border-radius:4px;cursor:pointer;font-size:18px}
-.file-list{flex:1;overflow-y:auto;padding:10px;min-height:0}
-.file-item{display:flex;align-items:center;padding:8px;border-radius:4px;margin-bottom:5px;background:#2d2d30;min-width:0}
-.file-item.active{background:#094771}
-.file-name{flex:1;cursor:pointer;padding:2px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.file-actions{display:flex;gap:3px;flex-shrink:0}
-.file-actions button{background:#3a3a3a;border:none;color:#ccc;padding:4px 6px;border-radius:3px;cursor:pointer;font-size:11px;white-space:nowrap}
-.file-actions button:hover{background:#555}
-.file-actions .save-btn{color:#4ec9b0}
-.file-actions .delete-btn{color:#f48771}
-.file-actions .rename-btn{color:#dcdcaa}
-.empty-tip{color:#888;padding:20px;text-align:center;font-size:13px}
-.sidebar-footer{border-top:1px solid #333;padding:10px;display:flex;justify-content:center;flex-shrink:0}
-.settings-btn{background:none;border:none;color:#888;cursor:pointer;font-size:20px;width:100%;text-align:center}
-.settings-btn:hover{color:#fff}
-.resizer{width:20px;background:#333;cursor:col-resize;user-select:none;touch-action:none;position:relative;flex-shrink:0;z-index:20}
-.resizer::after{content:'';position:absolute;top:0;left:-15px;right:-15px;bottom:0}
-.resizer:hover,.resizer:active{background:#0e639c}
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;position:relative}
-#editor-container{flex:1;min-height:0}
-#overlay{position:absolute;top:0;left:320px;right:0;bottom:0;background:rgba(30,30,30,0.95);display:flex;justify-content:center;align-items:center;font-size:22px;color:#888;z-index:10;transition:left 0.1s ease}
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);justify-content:center;align-items:center;z-index:100;padding:var(--sat) var(--sar) var(--sab) var(--sal);box-sizing:border-box}
-.modal-content{background:#252526;padding:25px;border-radius:8px;width:350px;max-height:80vh;display:flex;flex-direction:column}
-.modal-content h3{margin-top:0;color:white;margin-bottom:20px}
-.settings-content{flex:1;overflow-y:auto;max-height:calc(80vh - 120px);padding-right:5px}
-.settings-content::-webkit-scrollbar{width:6px}
-.settings-content::-webkit-scrollbar-track{background:#2d2d30}
-.settings-content::-webkit-scrollbar-thumb{background:#555;border-radius:3px}
-.setting-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #333}
-.setting-label{flex:1;margin-right:20px;font-size:14px}
-.setting-control{flex-shrink:0;width:120px;text-align:right}
-.setting-control select,.setting-control input[type="range"]{width:100%;background:#3c3c3c;border:1px solid #555;color:white;border-radius:4px;padding:5px}
-.setting-control input[type="checkbox"]{width:18px;height:18px;accent-color:#0e639c}
-.slider-value{display:inline-block;margin-left:10px;min-width:40px;text-align:center}
-.modal-actions{text-align:right;margin-top:20px;padding-top:20px;border-top:1px solid #333}
-.modal-actions button{margin-left:10px;padding:8px 16px;cursor:pointer;border-radius:4px;border:none}
-.no-select{user-select:none;-webkit-user-select:none}
+.container {
+  display: flex;
+  position: relative;
+  top: 0;
+  height: calc(100vh - 60px);
+  height: calc(100dvh - 60px);
+  height: calc(-webkit-fill-available - 60px);
+  min-height: calc(-webkit-fill-available - 60px);
+}
+
+.sidebar {
+  width: 320px;
+  min-width: 200px;
+  background: #252526;
+  border-right: 1px solid #333;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  z-index: 5;
+}
+
+.sidebar-header {
+  padding: 12px 15px;
+  font-weight: bold;
+  border-bottom: 1px solid #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sidebar-header button {
+  background: #0e639c;
+  border: none;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.file-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  min-height: 0;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-radius: 4px;
+  margin-bottom: 5px;
+  background: #2d2d30;
+  min-width: 0;
+}
+
+.file-item.active {
+  background: #094771;
+}
+
+.file-name {
+  flex: 1;
+  cursor: pointer;
+  padding: 2px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.file-actions {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.file-actions button {
+  background: #3a3a3a;
+  border: none;
+  color: #ccc;
+  padding: 4px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.file-actions button:hover {
+  background: #555;
+}
+
+.file-actions .save-btn {
+  color: #4ec9b0;
+}
+
+.file-actions .delete-btn {
+  color: #f48771;
+}
+
+.file-actions .rename-btn {
+  color: #dcdcaa;
+}
+
+.empty-tip {
+  color: #888;
+  padding: 20px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.sidebar-footer {
+  border-top: 1px solid #333;
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.settings-btn {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 20px;
+  width: 100%;
+  text-align: center;
+}
+
+.settings-btn:hover {
+  color: #fff;
+}
+
+.resizer {
+  width: 20px;
+  background: #333;
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+  position: relative;
+  flex-shrink: 0;
+  z-index: 20;
+}
+
+.resizer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -15px;
+  right: -15px;
+  bottom: 0;
+}
+
+.resizer:hover,
+.resizer:active {
+  background: #0e639c;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  position: relative;
+}
+
+#editor-container {
+  flex: 1;
+  min-height: 0;
+}
+
+#overlay {
+  position: absolute;
+  top: 0;
+  left: 320px;
+  right: 0;
+  bottom: 0;
+  background: rgba(30, 30, 30, 0.95);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 22px;
+  color: #888;
+  z-index: 10;
+  transition: left 0.1s ease;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  box-sizing: border-box;
+}
+
+.modal-content {
+  background: #252526;
+  padding: 25px;
+  border-radius: 8px;
+  width: 350px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  color: white;
+  margin-bottom: 20px;
+}
+
+.settings-content {
+  flex: 1;
+  overflow-y: auto;
+  max-height: calc(80vh - 120px);
+  padding-right: 5px;
+}
+
+.settings-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.settings-content::-webkit-scrollbar-track {
+  background: #2d2d30;
+}
+
+.settings-content::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 3px;
+}
+
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #333;
+}
+
+.setting-label {
+  flex: 1;
+  margin-right: 20px;
+  font-size: 14px;
+}
+
+.setting-control {
+  flex-shrink: 0;
+  width: 120px;
+  text-align: right;
+}
+
+.setting-control select,
+.setting-control input[type="range"] {
+  width: 100%;
+  background: #3c3c3c;
+  border: 1px solid #555;
+  color: white;
+  border-radius: 4px;
+  padding: 5px;
+}
+
+.setting-control input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #0e639c;
+}
+
+.slider-value {
+  display: inline-block;
+  margin-left: 10px;
+  min-width: 40px;
+  text-align: center;
+}
+
+.modal-actions {
+  text-align: right;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #333;
+}
+
+.modal-actions button {
+  margin-left: 10px;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 4px;
+  border: none;
+}
+
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+}
 </style>
 </head>
 <body>
+<!-- 🔴 Navbar HTML 结构 -->
+<nav class="navbar">
+  <div class="logo">
+    <img id="logo-img" src="" alt="Logo">
+    <span id="logo-text"></span>
+  </div>
+  
+  <!-- 汉堡按钮 -->
+  <div id="hamburger" class="hamburger">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+  
+  <!-- 菜单容器 -->
+  <div id="menu" class="menu"></div>
+</nav>
+
+<!-- 🔵 编辑器容器 -->
 <div class="container" id="container">
-<div class="sidebar" id="sidebar">
-<div class="sidebar-header">Files<button onclick="showModal('createModal')">+</button></div>
-<div class="file-list" id="fileList"></div>
-<div class="sidebar-footer"><button class="settings-btn" onclick="showModal('settingsModal')">⚙️</button></div>
-</div>
-<div class="resizer" id="resizer"></div>
-<div class="main"><div id="editor-container"></div></div>
-<div id="overlay">请选择或创建一个文件</div>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      Files
+      <button onclick="showModal('createModal')">+</button>
+    </div>
+    <div class="file-list" id="fileList"></div>
+    <div class="sidebar-footer">
+      <button class="settings-btn" onclick="showModal('settingsModal')">⚙️</button>
+    </div>
+  </div>
+  
+  <div class="resizer" id="resizer"></div>
+  
+  <div class="main">
+    <div id="editor-container"></div>
+  </div>
+  
+  <div id="overlay">请选择或创建一个文件</div>
 </div>
 
 <!-- Modals -->
-<div id="createModal" class="modal"><div class="modal-content"><h3>新建文件</h3><input id="fileNameInput" placeholder="例如: main.js" autofocus><div class="modal-actions"><button onclick="closeModal('createModal')" style="background:#666;color:white">取消</button><button onclick="createFile()" style="background:#0e639c;color:white">创建</button></div></div></div>
-<div id="renameModal" class="modal"><div class="modal-content"><h3>重命名文件</h3><input id="newFileNameInput" placeholder="新文件名" autofocus><div class="modal-actions"><button onclick="closeModal('renameModal')" style="background:#666;color:white">取消</button><button onclick="confirmRename()" style="background:#0e639c;color:white">确定</button></div></div></div>
-<div id="settingsModal" class="modal"><div class="modal-content"><h3>编辑器设置</h3><div class="settings-content" id="settingsContent"></div><div class="modal-actions"><button onclick="closeModal('settingsModal')" style="background:#666;color:white">关闭</button><button onclick="applySettings()" style="background:#0e639c;color:white">应用</button></div></div></div>
+<div id="createModal" class="modal">
+  <div class="modal-content">
+    <h3>新建文件</h3>
+    <input id="fileNameInput" placeholder="例如: main.js" autofocus>
+    <div class="modal-actions">
+      <button onclick="closeModal('createModal')" style="background:#666;color:white">取消</button>
+      <button onclick="createFile()" style="background:#0e639c;color:white">创建</button>
+    </div>
+  </div>
+</div>
 
+<div id="renameModal" class="modal">
+  <div class="modal-content">
+    <h3>重命名文件</h3>
+    <input id="newFileNameInput" placeholder="新文件名" autofocus>
+    <div class="modal-actions">
+      <button onclick="closeModal('renameModal')" style="background:#666;color:white">取消</button>
+      <button onclick="confirmRename()" style="background:#0e639c;color:white">确定</button>
+    </div>
+  </div>
+</div>
+
+<div id="settingsModal" class="modal">
+  <div class="modal-content">
+    <h3>编辑器设置</h3>
+    <div class="settings-content" id="settingsContent"></div>
+    <div class="modal-actions">
+      <button onclick="closeModal('settingsModal')" style="background:#666;color:white">关闭</button>
+      <button onclick="applySettings()" style="background:#0e639c;color:white">应用</button>
+    </div>
+  </div>
+</div>
+
+<!-- Monaco Editor -->
 <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+
+<!-- 🔴 引入外部 Navbar JS -->
+<script src="/navbar/script.js"></script>
+
+<!-- 编辑器 JS -->
 <script>
 // 全局变量
 let editor, files = JSON.parse(localStorage.getItem('tourtides_files')) || {}, currentFile = null, renameOldName = null;
-let settings = JSON.parse(localStorage.getItem('tourtides_settings')) || {fontSize:16,wordWrap:false,autoSave:true,autoCloseBrackets:true,showLineNumbers:true,highlightCurrentLine:true};
-const sidebar = document.getElementById('sidebar'), overlay = document.getElementById('overlay'), container = document.getElementById('container');
+let settings = JSON.parse(localStorage.getItem('tourtides_settings')) || {
+  fontSize: 16,
+  wordWrap: false,
+  autoSave: true,
+  autoCloseBrackets: true,
+  showLineNumbers: true,
+  highlightCurrentLine: true
+};
 
-// 关键修改：容器高度计算（减去 Navbar 60px）
+const sidebar = document.getElementById('sidebar'),
+      overlay = document.getElementById('overlay'),
+      container = document.getElementById('container');
+
+// 设置容器高度
 function setContainerHeight() {
-    const navHeight = 60; // Navbar 固定高度
-    container.style.height = (window.innerHeight - navHeight) + 'px';
-    console.log('Container height set to:', (window.innerHeight - navHeight) + 'px');
+  const navHeight = 60;
+  container.style.height = (window.innerHeight - navHeight) + 'px';
 }
 
 // 初始化
 window.addEventListener('load', () => {
-    setContainerHeight();
-    overlay.style.left = sidebar.offsetWidth + 'px';
-    
-    if (!window.__MONACO_LOADED__) {
-        window.__MONACO_LOADED__ = true;
-        require.config({paths: {'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs'}});
-        require(['vs/editor/editor.main'], () => {
-            editor = monaco.editor.create(document.getElementById('editor-container'), {
-                value: '', language: 'plaintext', theme: 'vs-dark', automaticLayout: true, minimap: {enabled: false},
-                fontSize: settings.fontSize, tabSize: 2, autoIndent: true, wordWrap: settings.wordWrap?'on':'off',
-                lineNumbers: settings.showLineNumbers?'on':'off', renderLineHighlight: settings.highlightCurrentLine?'all':'none'
-            });
-            
-            if (settings.autoCloseBrackets) editor.onDidType(t => {
-                const m = { '"':'"', "'":"'", '(':')', '{':'}', '[':']' }[t];
-                if (m) { editor.trigger('keyboard','type',{text:m}); editor.trigger('keyboard','cursorLeft'); }
-            });
-            
-            if (settings.autoSave) editor.onDidChangeModelContent(() => {
-                if (currentFile) setTimeout(() => { files[currentFile]=editor.getValue(); localStorage.setItem('tourtides_files',JSON.stringify(files)); }, 1000);
-            });
-            
-            renderFiles(); updateOverlay();
-            setTimeout(() => editor.layout(), 300);
+  setContainerHeight();
+  overlay.style.left = sidebar.offsetWidth + 'px';
+  
+  if (!window.__MONACO_LOADED__) {
+    window.__MONACO_LOADED__ = true;
+    
+    require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' }});
+    require(['vs/editor/editor.main'], () => {
+      editor = monaco.editor.create(document.getElementById('editor-container'), {
+        value: '',
+        language: 'plaintext',
+        theme: 'vs-dark',
+        automaticLayout: true,
+        minimap: { enabled: false },
+        fontSize: settings.fontSize,
+        tabSize: 2,
+        autoIndent: true,
+        wordWrap: settings.wordWrap ? 'on' : 'off',
+        lineNumbers: settings.showLineNumbers ? 'on' : 'off',
+        renderLineHighlight: settings.highlightCurrentLine ? 'all' : 'none'
+      });
+      
+      if (settings.autoCloseBrackets) {
+        editor.onDidType(t => {
+          const m = { '"':'"', "'":"'", '(':')', '{':'}', '[':']' }[t];
+          if (m) { editor.trigger('keyboard','type',{text:m}); editor.trigger('keyboard','cursorLeft'); }
         });
-    }
+      }
+      
+      if (settings.autoSave) {
+        editor.onDidChangeModelContent(() => {
+          if (currentFile) setTimeout(() => { 
+            files[currentFile]=editor.getValue(); 
+            localStorage.setItem('tourtides_files',JSON.stringify(files)); 
+          }, 1000);
+        });
+      }
+      
+      renderFiles(); 
+      updateOverlay();
+      setTimeout(() => editor.layout(), 300);
+    });
+  }
 });
 
-// 窗口/旋转适配
-window.addEventListener('resize', setContainerHeight);
-window.addEventListener('orientationchange', () => setTimeout(setContainerHeight, 100));
+// 窗口大小变化
+window.addEventListener('resize', () => {
+  setContainerHeight();
+  overlay.style.left = sidebar.offsetWidth + 'px';
+});
+
+// 屏幕旋转
+window.addEventListener('orientationchange', () => {
+  setTimeout(setContainerHeight, 100);
+});
 
 // 拖拽逻辑
 let isDragging = false;
 const resizer = document.getElementById('resizer');
+
 resizer.addEventListener('mousedown', () => { isDragging=true; document.body.classList.add('no-select'); });
-resizer.addEventListener('touchstart', e => { isDragging=true; document.body.classList.add('no-select'); e.preventDefault(); }, {passive:false});
+resizer.addEventListener('touchstart', e => { isDragging=true; document.body.classList.add('no-select'); e.preventDefault(); }, { passive: false });
+
 document.addEventListener('mousemove', e => {
-    if (!isDragging) return;
-    let w = e.clientX;
-    if (w>=200 && w<=600) { sidebar.style.width=w+'px'; overlay.style.left=w+'px'; }
+  if (!isDragging) return;
+  let w = e.clientX;
+  if (w>=200 && w<=600) { sidebar.style.width=w+'px'; overlay.style.left=w+'px'; }
 });
+
 document.addEventListener('touchmove', e => {
-    if (!isDragging) return;
-    e.preventDefault();
-    let w = e.touches[0].clientX;
-    if (w>=200 && w<=600) { sidebar.style.width=w+'px'; overlay.style.left=w+'px'; }
-}, {passive:false});
+  if (!isDragging) return;
+  e.preventDefault();
+  let w = e.touches[0].clientX;
+  if (w>=200 && w<=600) { sidebar.style.width=w+'px'; overlay.style.left=w+'px'; }
+}, { passive: false });
+
 document.addEventListener('mouseup', () => { isDragging=false; document.body.classList.remove('no-select'); });
 document.addEventListener('touchend', () => { isDragging=false; document.body.classList.remove('no-select'); });
 
-// 文件操作
-function getLang(n) { return n.endsWith('.js')?'javascript':n.endsWith('.html')?'html':n.endsWith('.css')?'css':n.endsWith('.json')?'json':n.endsWith('.md')?'markdown':'plaintext'; }
-function renderFiles() {
-    const list = document.getElementById('fileList');
-    list.innerHTML = '';
-    const names = Object.keys(files);
-    if (!names.length) { list.innerHTML = '<div class="empty-tip">暂无文件<br>点击 + 创建</div>'; return; }
-    names.forEach(name => {
-        const div = document.createElement('div');
-        div.className = 'file-item' + (name===currentFile?' active':'');
-        const span = document.createElement('span');
-        span.className = 'file-name';
-        span.textContent = name;
-        span.onclick = () => selectFile(name);
-        const actions = document.createElement('div');
-        actions.className = 'file-actions';
-        ['Save','DL','ReN','Del'].forEach((txt,i) => {
-            const btn = document.createElement('button');
-            btn.textContent = txt;
-            btn.className = i==0?'save-btn':i==2?'rename-btn':'delete-btn';
-            if (i==0) btn.onclick = e => { e.stopPropagation(); saveFile(name); };
-            if (i==1) btn.onclick = e => { e.stopPropagation(); downloadFile(name); };
-            if (i==2) btn.onclick = e => { e.stopPropagation(); showModal('renameModal'); document.getElementById('newFileNameInput').value=name; renameOldName=name; };
-            if (i==3) btn.onclick = e => { e.stopPropagation(); deleteFile(name); };
-            actions.appendChild(btn);
-        });
-        div.append(span, actions);
-        list.appendChild(div);
-    });
-}
-function selectFile(name) {
-    currentFile = name;
-    editor.setValue(files[name]);
-    const model = editor.getModel();
-    if (model) monaco.editor.setModelLanguage(model, getLang(name));
-    updateOverlay(); renderFiles();
-}
-function saveFile(name) { if (!name) return; files[name]=editor.getValue(); localStorage.setItem('tourtides_files',JSON.stringify(files)); showMsg(`"${name}" 已保存`); }
-function downloadFile(name) { const b=new Blob([files[name]||''],{type:'text/plain'}), a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name; a.click(); }
-function deleteFile(name) {
-    if (!confirm(`删除 "${name}"?`)) return;
-    if (currentFile===name) { currentFile=null; editor.setValue(''); updateOverlay(); }
-    delete files[name]; localStorage.setItem('tourtides_files',JSON.stringify(files)); renderFiles(); showMsg(`"${name}" 已删除`);
-}
-function confirmRename() {
-    const newName = document.getElementById('newFileNameInput').value.trim();
-    if (!newName || newName===renameOldName) return closeModal('renameModal');
-    if (files[newName]) return alert('文件已存在');
-    files[newName] = files[renameOldName];
-    delete files[renameOldName];
-    if (currentFile===renameOldName) currentFile=newName;
-    localStorage.setItem('tourtides_files',JSON.stringify(files));
-    renderFiles(); closeModal('renameModal'); showMsg(`重命名为 "${newName}"`);
-}
-function createFile() {
-    const name = document.getElementById('fileNameInput').value.trim();
-    if (!name) return alert('文件名不能为空');
-    if (files[name]) return alert('文件已存在');
-    files[name] = name.endsWith('.html')?'<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n<title>Document</title>\n</head>\n<body>\n\n</body>\n</html>':'// Hello TourTi\n';
-    localStorage.setItem('tourtides_files',JSON.stringify(files));
-    closeModal('createModal'); selectFile(name); renderFiles();
+// 文件操作函数
+function getLang(n) { 
+  return n.endsWith('.js')?'javascript':
+         n.endsWith('.html')?'html':
+         n.endsWith('.css')?'css':
+         n.endsWith('.json')?'json':
+         n.endsWith('.md')?'markdown':'plaintext'; 
 }
 
-// UI 辅助
-function showMsg(t) { overlay.textContent=t; overlay.style.display='flex'; setTimeout(()=>{overlay.textContent='请选择或创建一个文件'; updateOverlay();},800); }
-function updateOverlay() { overlay.style.display = currentFile?'none':'flex'; }
-function showModal(id) { document.getElementById(id).style.display='flex'; if(id==='settingsModal') loadSettings(); }
-function closeModal(id) { document.getElementById(id).style.display='none'; }
+function renderFiles() {
+  const list = document.getElementById('fileList');
+  list.innerHTML = '';
+  const names = Object.keys(files);
+  if (!names.length) { list.innerHTML = '<div class="empty-tip">暂无文件<br>点击 + 创建</div>'; return; }
+  
+  names.forEach(name => {
+    const div = document.createElement('div');
+    div.className = 'file-item' + (name===currentFile?' active':'');
+    
+    const span = document.createElement('span');
+    span.className = 'file-name';
+    span.textContent = name;
+    span.onclick = () => selectFile(name);
+    
+    const actions = document.createElement('div');
+    actions.className = 'file-actions';
+    
+    ['Save','DL','ReN','Del'].forEach((txt,i) => {
+      const btn = document.createElement('button');
+      btn.textContent = txt;
+      btn.className = i==0?'save-btn':i==2?'rename-btn':'delete-btn';
+      
+      if (i==0) btn.onclick = e => { e.stopPropagation(); saveFile(name); };
+      if (i==1) btn.onclick = e => { e.stopPropagation(); downloadFile(name); };
+      if (i==2) btn.onclick = e => { e.stopPropagation(); showModal('renameModal'); document.getElementById('newFileNameInput').value=name; renameOldName=name; };
+      if (i==3) btn.onclick = e => { e.stopPropagation(); deleteFile(name); };
+      
+      actions.appendChild(btn);
+    });
+    
+    div.append(span, actions);
+    list.appendChild(div);
+  });
+}
+
+function selectFile(name) {
+  currentFile = name;
+  editor.setValue(files[name]);
+  const model = editor.getModel();
+  if (model) monaco.editor.setModelLanguage(model, getLang(name));
+  updateOverlay(); 
+  renderFiles();
+}
+
+function saveFile(name) { 
+  if (!name) return; 
+  files[name]=editor.getValue(); 
+  localStorage.setItem('tourtides_files',JSON.stringify(files)); 
+  showMsg(`"${name}" 已保存`); 
+}
+
+function downloadFile(name) { 
+  const b=new Blob([files[name]||''],{type:'text/plain'}), a=document.createElement('a'); 
+  a.href=URL.createObjectURL(b); a.download=name; a.click(); 
+}
+
+function deleteFile(name) {
+  if (!confirm(`删除 "${name}"?`)) return;
+  if (currentFile===name) { currentFile=null; editor.setValue(''); updateOverlay(); }
+  delete files[name]; 
+  localStorage.setItem('tourtides_files',JSON.stringify(files)); 
+  renderFiles(); 
+  showMsg(`"${name}" 已删除`);
+}
+
+function confirmRename() {
+  const newName = document.getElementById('newFileNameInput').value.trim();
+  if (!newName || newName===renameOldName) return closeModal('renameModal');
+  if (files[newName]) return alert('文件已存在');
+  
+  files[newName] = files[renameOldName];
+  delete files[renameOldName];
+  if (currentFile===renameOldName) currentFile=newName;
+  
+  localStorage.setItem('tourtides_files',JSON.stringify(files));
+  renderFiles(); 
+  closeModal('renameModal'); 
+  showMsg(`重命名为 "${newName}"`);
+}
+
+function createFile() {
+  const name = document.getElementById('fileNameInput').value.trim();
+  if (!name) return alert('文件名不能为空');
+  if (files[name]) return alert('文件已存在');
+  
+  files[name] = name.endsWith('.html')?
+    '<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n<title>Document</title>\n</head>\n<body>\n\n</body>\n</html>':
+    '// Hello TourTi\n';
+  
+  localStorage.setItem('tourtides_files',JSON.stringify(files));
+  closeModal('createModal'); 
+  selectFile(name); 
+  renderFiles();
+}
+
+// UI 辅助函数
+function showMsg(t) { 
+  overlay.textContent=t; 
+  overlay.style.display='flex'; 
+  setTimeout(()=>{overlay.textContent='请选择或创建一个文件'; updateOverlay();},800); 
+}
+
+function updateOverlay() { 
+  overlay.style.display = currentFile?'none':'flex'; 
+}
+
+function showModal(id) { 
+  document.getElementById(id).style.display='flex'; 
+  if(id==='settingsModal') loadSettings(); 
+}
+
+function closeModal(id) { 
+  document.getElementById(id).style.display='none'; 
+}
+
 function loadSettings() {
-    document.getElementById('settingsContent').innerHTML = `
-        <div class="setting-row"><span class="setting-label">字体大小</span><div class="setting-control"><input type="range" id="fontSizeSlider" min="10" max="24" value="${settings.fontSize}"><span class="slider-value">${settings.fontSize}px</span></div></div>
-        <div class="setting-row"><span class="setting-label">自动换行</span><div class="setting-control"><input type="checkbox" id="wordWrapCheckbox" ${settings.wordWrap?'checked':''}></div></div>
-        <div class="setting-row"><span class="setting-label">自动保存</span><div class="setting-control"><input type="checkbox" id="autoSaveCheckbox" ${settings.autoSave?'checked':''}></div></div>
-        <div class="setting-row"><span class="setting-label">自动补全括号</span><div class="setting-control"><input type="checkbox" id="autoCloseBrackets" ${settings.autoCloseBrackets?'checked':''}></div></div>
-        <div class="setting-row"><span class="setting-label">显示行号</span><div class="setting-control"><input type="checkbox" id="showLineNumbers" ${settings.showLineNumbers?'checked':''}></div></div>
-        <div class="setting-row"><span class="setting-label">高亮当前行</span><div class="setting-control"><input type="checkbox" id="highlightCurrentLine" ${settings.highlightCurrentLine?'checked':''}></div></div>
-    `;
-    document.getElementById('fontSizeSlider').addEventListener('input', function() { document.querySelector('#settingsContent .slider-value').textContent=this.value+'px'; });
+  document.getElementById('settingsContent').innerHTML = `
+    <div class="setting-row"><span class="setting-label">字体大小</span><div class="setting-control"><input type="range" id="fontSizeSlider" min="10" max="24" value="${settings.fontSize}"><span class="slider-value">${settings.fontSize}px</span></div></div>
+    <div class="setting-row"><span class="setting-label">自动换行</span><div class="setting-control"><input type="checkbox" id="wordWrapCheckbox" ${settings.wordWrap?'checked':''}></div></div>
+    <div class="setting-row"><span class="setting-label">自动保存</span><div class="setting-control"><input type="checkbox" id="autoSaveCheckbox" ${settings.autoSave?'checked':''}></div></div>
+    <div class="setting-row"><span class="setting-label">自动补全括号</span><div class="setting-control"><input type="checkbox" id="autoCloseBrackets" ${settings.autoCloseBrackets?'checked':''}></div></div>
+    <div class="setting-row"><span class="setting-label">显示行号</span><div class="setting-control"><input type="checkbox" id="showLineNumbers" ${settings.showLineNumbers?'checked':''}></div></div>
+    <div class="setting-row"><span class="setting-label">高亮当前行</span><div class="setting-control"><input type="checkbox" id="highlightCurrentLine" ${settings.highlightCurrentLine?'checked':''}></div></div>
+  `;
+  document.getElementById('fontSizeSlider').addEventListener('input', function() { 
+    document.querySelector('#settingsContent .slider-value').textContent=this.value+'px'; 
+  });
 }
+
 function applySettings() {
-    settings.fontSize = parseInt(document.getElementById('fontSizeSlider').value);
-    settings.wordWrap = document.getElementById('wordWrapCheckbox').checked;
-    settings.autoSave = document.getElementById('autoSaveCheckbox').checked;
-    settings.autoCloseBrackets = document.getElementById('autoCloseBrackets').checked;
-    settings.showLineNumbers = document.getElementById('showLineNumbers').checked;
-    settings.highlightCurrentLine = document.getElementById('highlightCurrentLine').checked;
-    localStorage.setItem('tourtides_settings', JSON.stringify(settings));
-    
-    editor.updateOptions({
-        fontSize: settings.fontSize, wordWrap: settings.wordWrap?'on':'off',
-        lineNumbers: settings.showLineNumbers?'on':'off', renderLineHighlight: settings.highlightCurrentLine?'all':'none'
+  settings.fontSize = parseInt(document.getElementById('fontSizeSlider').value);
+  settings.wordWrap = document.getElementById('wordWrapCheckbox').checked;
+  settings.autoSave = document.getElementById('autoSaveCheckbox').checked;
+  settings.autoCloseBrackets = document.getElementById('autoCloseBrackets').checked;
+  settings.showLineNumbers = document.getElementById('showLineNumbers').checked;
+  settings.highlightCurrentLine = document.getElementById('highlightCurrentLine').checked;
+  
+  localStorage.setItem('tourtides_settings', JSON.stringify(settings));
+  
+  editor.updateOptions({
+    fontSize: settings.fontSize, 
+    wordWrap: settings.wordWrap?'on':'off',
+    lineNumbers: settings.showLineNumbers?'on':'off', 
+    renderLineHighlight: settings.highlightCurrentLine?'all':'none'
+  });
+  
+  // 重新绑定自动补全括号
+  editor.onDidType = null;
+  if (settings.autoCloseBrackets) {
+    editor.onDidType(t => {
+      const m = { '"':'"', "'":"'", '(':')', '{':'}', '[':']' }[t];
+      if (m) { editor.trigger('keyboard','type',{text:m}); editor.trigger('keyboard','cursorLeft'); }
     });
-    
-    editor.onDidType = null;
-    if (settings.autoCloseBrackets) editor.onDidType(t => {
-        const m = { '"':'"', "'":"'", '(':')', '{':'}', '[':']' }[t];
-        if (m) { editor.trigger('keyboard','type',{text:m}); editor.trigger('keyboard','cursorLeft'); }
+  }
+  
+  // 重新绑定自动保存
+  editor.onDidChangeModelContent = null;
+  if (settings.autoSave && currentFile) {
+    editor.onDidChangeModelContent(() => {
+      if (currentFile) setTimeout(() => { 
+        files[currentFile]=editor.getValue(); 
+        localStorage.setItem('tourtides_files',JSON.stringify(files)); 
+      }, 1000);
     });
-    
-    editor.onDidChangeModelContent = null;
-    if (settings.autoSave && currentFile) editor.onDidChangeModelContent(() => {
-        if (currentFile) setTimeout(() => { files[currentFile]=editor.getValue(); localStorage.setItem('tourtides_files',JSON.stringify(files)); }, 1000);
-    });
-    
-    closeModal('settingsModal');
+  }
+  
+  closeModal('settingsModal');
 }
-<script src="/navbar/script.js">
 </script>
 </body>
 </html>
