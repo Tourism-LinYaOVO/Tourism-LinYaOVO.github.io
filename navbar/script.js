@@ -1,4 +1,4 @@
-// 获取当前路径
+// 获取当前路径（标准化处理）
 const currentPath = window.location.pathname;
 
 fetch("/navbar/navbar.json")
@@ -11,74 +11,103 @@ function renderNavbar(data) {
   document.getElementById("logo-text").innerText = data.logo.text;
 
   const menu = document.getElementById("menu");
+  menu.innerHTML = ""; // 清空旧内容
   data.menu.forEach(item => {
     menu.appendChild(createMenuItem(item));
   });
 
   initBehavior();
-  
-  // 🔴 新增：禁用当前路径的菜单项
-  disableCurrentPathLinks();
+  disableCurrentPathLinks(); // 确保调用
 }
 
 function createMenuItem(item) {
-  // 如果是链接且没有子项，生成 <a>
-  if (item.link && !item.children) {
+  // 🔴 关键修复：所有带 link 的项都生成 <a>，无论是否有子菜单
+  if (item.link) {
     const el = document.createElement("a");
     el.className = "menu-item";
     el.href = item.link;
     el.textContent = item.label;
-    
-    // 🔴 新增：检查是否为当前路径
+
+    // 检查是否为当前路径
     if (isCurrentPath(item.link)) {
       el.classList.add("current-page");
-      el.href = "javascript:void(0)"; // 禁用链接
+      el.href = "javascript:void(0)";
       el.setAttribute("aria-disabled", "true");
+      // 强制阻止跳转
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      });
     }
-    
+
+    // 处理子菜单（如果有）
+    if (item.children) {
+      const arrow = document.createElement("span");
+      arrow.className = "arrow";
+      arrow.innerHTML = "▾";
+      el.appendChild(arrow);
+
+      const dropdown = document.createElement("div");
+      dropdown.className = "dropdown";
+      item.children.forEach(child => {
+        dropdown.appendChild(createMenuItem(child));
+      });
+      el.appendChild(dropdown);
+    }
+
+    return el;
+  } else {
+    // 无 link 的纯容器项
+    const el = document.createElement("div");
+    el.className = "menu-item";
+    el.innerHTML = item.label;
+
+    if (item.children) {
+      const arrow = document.createElement("span");
+      arrow.className = "arrow";
+      arrow.innerHTML = "▾";
+      el.appendChild(arrow);
+
+      const dropdown = document.createElement("div");
+      dropdown.className = "dropdown";
+      item.children.forEach(child => {
+        dropdown.appendChild(createMenuItem(child));
+      });
+      el.appendChild(dropdown);
+    }
+
     return el;
   }
+}
 
-  // 否则生成 <div>（作为容器）
-  const el = document.createElement("div");
-  el.className = "menu-item";
-  el.innerHTML = item.label;
+// 🔴 修复路径匹配逻辑（支持相对/绝对路径）
+function isCurrentPath(linkPath) {
+  try {
+    // 解析链接路径（处理相对路径）
+    const linkUrl = new URL(linkPath, window.location.origin);
+    const linkPathname = linkUrl.pathname;
+    const currentPathname = window.location.pathname;
 
-  if (item.children) {
-    const arrow = document.createElement("span");
-    arrow.className = "arrow";
-    arrow.innerHTML = "▾";
-    el.appendChild(arrow);
-
-    const dropdown = document.createElement("div");
-    dropdown.className = "dropdown";
-
-    item.children.forEach(child => {
-      dropdown.appendChild(createMenuItem(child));
-    });
-
-    el.appendChild(dropdown);
+    // 标准化：去掉尾部斜杠，根路径特殊处理
+    const normalize = (path) => path.replace(/\/$/, "") || "/";
+    return normalize(linkPathname) === normalize(currentPathname);
+  } catch (e) {
+    console.warn("Invalid link path:", linkPath);
+    return false;
   }
-
-  return el;
 }
 
 function initBehavior() {
   const hamburger = document.getElementById("hamburger");
   const menu = document.getElementById("menu");
 
-  // 汉堡菜单
   hamburger.addEventListener("click", e => {
     e.stopPropagation();
     menu.classList.toggle("open");
   });
 
-  // 移动端逻辑
-  if (window.innerWidth <= 768) {
-    setupMobileMenu();
-  }
+  if (window.innerWidth <= 768) setupMobileMenu();
 
-  // 窗口大小改变时重新初始化
   window.addEventListener("resize", () => {
     if (window.innerWidth <= 768) {
       setupMobileMenu();
@@ -87,7 +116,6 @@ function initBehavior() {
     }
   });
 
-  // 点击页面其他地方关闭菜单
   document.addEventListener("click", e => {
     if (window.innerWidth <= 768 && !menu.contains(e.target)) {
       menu.classList.remove("open");
@@ -108,27 +136,28 @@ function setupMobileMenu() {
 }
 
 function handleMobileClick(e) {
-  // 如果是 <a> 标签，直接跳转，不做任何处理
-  if (this.tagName === 'A') return;
+  // 🔴 关键：如果是当前页面的链接，直接阻止
+  if (this.tagName === "A" && this.classList.contains("current-page")) {
+    e.preventDefault();
+    e.stopPropagation();
+    return;
+  }
+
+  if (this.tagName === "A") return; // 普通链接直接跳转
 
   e.stopPropagation();
-
   const dropdown = this.querySelector(":scope > .dropdown");
   if (!dropdown) return;
 
-  // 关闭同级的其他菜单
-  const siblings = Array.from(this.parentElement.children);
-  siblings.forEach(sibling => {
+  // 关闭同级菜单
+  Array.from(this.parentElement.children).forEach(sibling => {
     if (sibling !== this) {
       sibling.classList.remove("active");
       const siblingDropdown = sibling.querySelector(":scope > .dropdown");
-      if (siblingDropdown) {
-        siblingDropdown.style.display = "none";
-      }
+      if (siblingDropdown) siblingDropdown.style.display = "none";
     }
   });
 
-  // 切换当前菜单
   this.classList.toggle("active");
   dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
 }
@@ -151,35 +180,21 @@ function closeAllDropdowns() {
   });
 }
 
-// 🔴 新增：检查是否为当前路径
-function isCurrentPath(linkPath) {
-  // 获取链接的路径部分
-  const linkUrl = new URL(linkPath, window.location.origin);
-  const linkPathname = linkUrl.pathname;
-  
-  // 标准化路径（去除尾部斜杠）
-  const normalizePath = (path) => path.replace(/\/$/, '') || '/';
-  
-  return normalizePath(linkPathname) === normalizePath(currentPath);
-}
-
-// 🔴 新增：禁用当前路径的所有链接
+// 🔴 强制样式注入（防止被覆盖）
 function disableCurrentPathLinks() {
-  // 为当前页面的菜单项添加特殊样式
-  const style = document.createElement('style');
+  const style = document.createElement("style");
   style.textContent = `
     .menu-item.current-page {
       color: #999 !important;
       cursor: default !important;
-      pointer-events: none;
+      pointer-events: none !important;
       opacity: 0.7;
+      text-decoration: none !important;
     }
-    
     .menu-item.current-page:hover {
       background: transparent !important;
       color: #999 !important;
     }
-    
     @media (min-width: 769px) {
       .menu-item.current-page:hover {
         color: #999 !important;
