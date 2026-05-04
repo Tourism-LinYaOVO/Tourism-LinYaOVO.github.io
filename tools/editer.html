@@ -9,7 +9,18 @@
 :root{--sat:env(safe-area-inset-top);--sar:env(safe-area-inset-right);--sab:env(safe-area-inset-bottom);--sal:env(safe-area-inset-left)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{height:100dvh;height:-webkit-fill-available;overflow:hidden;background:#1e1e1e;color:#d4d4d4;font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:var(--sat) var(--sar) var(--sab) var(--sal)}
-.container{display:flex;height:100%;position:relative;min-height:-webkit-fill-available}
+
+/* 关键修改：适配顶部 60px Navbar */
+.container{
+    display:flex;
+    position:relative;
+    top:60px; /* Navbar 高度 */
+    height:calc(100vh - 60px);
+    height:calc(100dvh - 60px);
+    height:calc(-webkit-fill-available - 60px);
+    min-height:calc(-webkit-fill-available - 60px);
+}
+
 .sidebar{width:320px;min-width:200px;background:#252526;border-right:1px solid #333;display:flex;flex-direction:column;flex-shrink:0;z-index:5}
 .sidebar-header{padding:12px 15px;font-weight:bold;border-bottom:1px solid #333;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
 .sidebar-header button{background:#0e639c;border:none;color:white;width:28px;height:28px;border-radius:4px;cursor:pointer;font-size:18px}
@@ -70,16 +81,23 @@ body{height:100dvh;height:-webkit-fill-available;overflow:hidden;background:#1e1
 
 <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
 <script>
-// Global variables
+// 全局变量
 let editor, files = JSON.parse(localStorage.getItem('tourtides_files')) || {}, currentFile = null, renameOldName = null;
 let settings = JSON.parse(localStorage.getItem('tourtides_settings')) || {fontSize:16,wordWrap:false,autoSave:true,autoCloseBrackets:true,showLineNumbers:true,highlightCurrentLine:true};
 const sidebar = document.getElementById('sidebar'), overlay = document.getElementById('overlay'), container = document.getElementById('container');
 
-// Initialize
+// 关键修改：容器高度计算（减去 Navbar 60px）
+function setContainerHeight() {
+    const navHeight = 60; // Navbar 固定高度
+    container.style.height = (window.innerHeight - navHeight) + 'px';
+    console.log('Container height set to:', (window.innerHeight - navHeight) + 'px');
+}
+
+// 初始化
 window.addEventListener('load', () => {
-    container.style.height = window.innerHeight + 'px';
+    setContainerHeight();
     overlay.style.left = sidebar.offsetWidth + 'px';
-    
+    
     if (!window.__MONACO_LOADED__) {
         window.__MONACO_LOADED__ = true;
         require.config({paths: {'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs'}});
@@ -89,29 +107,29 @@ window.addEventListener('load', () => {
                 fontSize: settings.fontSize, tabSize: 2, autoIndent: true, wordWrap: settings.wordWrap?'on':'off',
                 lineNumbers: settings.showLineNumbers?'on':'off', renderLineHighlight: settings.highlightCurrentLine?'all':'none'
             });
-            
+            
             if (settings.autoCloseBrackets) editor.onDidType(t => {
                 const m = { '"':'"', "'":"'", '(':')', '{':'}', '[':']' }[t];
                 if (m) { editor.trigger('keyboard','type',{text:m}); editor.trigger('keyboard','cursorLeft'); }
             });
-            
+            
             if (settings.autoSave) editor.onDidChangeModelContent(() => {
                 if (currentFile) setTimeout(() => { files[currentFile]=editor.getValue(); localStorage.setItem('tourtides_files',JSON.stringify(files)); }, 1000);
             });
-            
+            
             renderFiles(); updateOverlay();
             setTimeout(() => editor.layout(), 300);
         });
     }
 });
 
-// Resize handling
-window.addEventListener('resize', () => container.style.height = window.innerHeight + 'px');
-window.addEventListener('orientationchange', () => setTimeout(() => container.style.height = window.innerHeight + 'px', 100));
+// 窗口/旋转适配
+window.addEventListener('resize', setContainerHeight);
+window.addEventListener('orientationchange', () => setTimeout(setContainerHeight, 100));
 
-// Drag logic
-const resizer = document.getElementById('resizer');
+// 拖拽逻辑
 let isDragging = false;
+const resizer = document.getElementById('resizer');
 resizer.addEventListener('mousedown', () => { isDragging=true; document.body.classList.add('no-select'); });
 resizer.addEventListener('touchstart', e => { isDragging=true; document.body.classList.add('no-select'); e.preventDefault(); }, {passive:false});
 document.addEventListener('mousemove', e => {
@@ -128,7 +146,7 @@ document.addEventListener('touchmove', e => {
 document.addEventListener('mouseup', () => { isDragging=false; document.body.classList.remove('no-select'); });
 document.addEventListener('touchend', () => { isDragging=false; document.body.classList.remove('no-select'); });
 
-// File operations
+// 文件操作
 function getLang(n) { return n.endsWith('.js')?'javascript':n.endsWith('.html')?'html':n.endsWith('.css')?'css':n.endsWith('.json')?'json':n.endsWith('.md')?'markdown':'plaintext'; }
 function renderFiles() {
     const list = document.getElementById('fileList');
@@ -191,7 +209,7 @@ function createFile() {
     closeModal('createModal'); selectFile(name); renderFiles();
 }
 
-// UI helpers
+// UI 辅助
 function showMsg(t) { overlay.textContent=t; overlay.style.display='flex'; setTimeout(()=>{overlay.textContent='请选择或创建一个文件'; updateOverlay();},800); }
 function updateOverlay() { overlay.style.display = currentFile?'none':'flex'; }
 function showModal(id) { document.getElementById(id).style.display='flex'; if(id==='settingsModal') loadSettings(); }
@@ -215,23 +233,23 @@ function applySettings() {
     settings.showLineNumbers = document.getElementById('showLineNumbers').checked;
     settings.highlightCurrentLine = document.getElementById('highlightCurrentLine').checked;
     localStorage.setItem('tourtides_settings', JSON.stringify(settings));
-    
+    
     editor.updateOptions({
         fontSize: settings.fontSize, wordWrap: settings.wordWrap?'on':'off',
         lineNumbers: settings.showLineNumbers?'on':'off', renderLineHighlight: settings.highlightCurrentLine?'all':'none'
     });
-    
+    
     editor.onDidType = null;
     if (settings.autoCloseBrackets) editor.onDidType(t => {
         const m = { '"':'"', "'":"'", '(':')', '{':'}', '[':']' }[t];
         if (m) { editor.trigger('keyboard','type',{text:m}); editor.trigger('keyboard','cursorLeft'); }
     });
-    
+    
     editor.onDidChangeModelContent = null;
     if (settings.autoSave && currentFile) editor.onDidChangeModelContent(() => {
         if (currentFile) setTimeout(() => { files[currentFile]=editor.getValue(); localStorage.setItem('tourtides_files',JSON.stringify(files)); }, 1000);
     });
-    
+    
     closeModal('settingsModal');
 }
 <script src="/navbar/script.js">
