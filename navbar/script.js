@@ -95,17 +95,17 @@ function createMenuItem(item) {
 function isCurrentPath(linkPath) {
   try {
     // 1. 外部链接直接排除
-    if (linkPath.startsWith('http://') || 
-        linkPath.startsWith('https://') || 
+    if (linkPath.startsWith('http://') || 
+        linkPath.startsWith('https://') || 
         linkPath.startsWith('//')) {
       const linkUrl = new URL(linkPath);
       if (linkUrl.origin !== currentOrigin) return false;
       linkPath = linkUrl.pathname;
-    } 
+    } 
     // 2. 绝对路径（以/开头）直接使用
     else if (linkPath.startsWith('/')) {
       // 无需处理
-    } 
+    } 
     // 3. 相对路径：基于当前目录解析
     else {
       // 🔧 关键修复：使用当前目录作为基URL
